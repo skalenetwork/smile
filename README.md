@@ -54,7 +54,7 @@ Your phone number is now your wallet identity.
 <summary><strong>Table of Contents</strong></summary>
 
 - [Building Reference Implementation](#building-reference-implementation)
-- [`SmileSeedDerivation` Class](#smileseedderivation-class)
+- [Using `SmileSeedDerivation` Class](#smileseedderivation-class)
     - [Overview](#overview)
     - [Public Interface Summary](#public-interface-summary)
     - [`deriveBIP32MasterSeed2G`](#derivebip32masterseed2g)
