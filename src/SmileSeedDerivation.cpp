@@ -1,6 +1,6 @@
 #include "common.h"
 #include "CValues.h"
-#include "SimEmulator.h"
+#include "SmileSeedDerivation.h"
 #include "Milenage.h"
 
 
@@ -8,15 +8,15 @@
 #include "Aka2G.h"
 
 
-using Block128 = std::array<uint8_t, 16>;
-using Block256 = std::array<uint8_t, 32>;
+using array16 = std::array<uint8_t, 16>;
+using array256 = std::array<uint8_t, 32>;
 
 
-Block256 SimEmulator::rfc5869Hkdf(const std::vector<uint8_t>& ikm,
+array256 SmileSeedDerivation::rfc5869Hkdf(const std::vector<uint8_t>& ikm,
                             std::string_view salt,
                             std::string_view info)
 {
-    Block256 out{};
+    array256 out{};
     unsigned char prk[32];
     size_t prk_len = sizeof(prk);
 
@@ -98,8 +98,8 @@ Block256 SimEmulator::rfc5869Hkdf(const std::vector<uint8_t>& ikm,
 
 
 std::pair<std::array<uint8_t, 4>, std::array<uint8_t, 8> >
-SimEmulator::authenticate2G(const Block128 &rand,
-                            const Block128 &ki) {
+SmileSeedDerivation::authenticate2G(const array16 &rand,
+                            const array16 &ki) {
     std::array<uint8_t, 4> sres{};
     std::array<uint8_t, 8> kc{};
     Aka2G::runAka(ki.data(), rand.data(), sres.data(), kc.data());
@@ -108,8 +108,8 @@ SimEmulator::authenticate2G(const Block128 &rand,
 
 
 
-Block256
-SimEmulator::deriveBIP32MasterSeed2G(const Block128 &rand, const Block128 &ki)
+array256
+SmileSeedDerivation::deriveBIP32MasterSeed2G(const array16 &rand, const array16 &ki)
 {
     // 1️⃣ Run 2G AKA to obtain SRES (4 bytes) and Kc (8 bytes)
     auto [sres, kc] = authenticate2G(rand, ki);
@@ -130,11 +130,11 @@ SimEmulator::deriveBIP32MasterSeed2G(const Block128 &rand, const Block128 &ki)
 
 
 
-Block256
-SimEmulator::deriveBIP32MasterSeed3G(const Block128& rand,
-                          const Block128& autn,
-                          const Block128& k,
-                          const Block128& opc,
+array256
+SmileSeedDerivation::deriveBIP32MasterSeed3G(const array16& rand,
+                          const array16& autn,
+                          const array16& k,
+                          const array16& opc,
                           const std::array<uint8_t, 2>& amf)
 {
     // 1️⃣ Run 3G AKA to obtain RES, CK, IK, AK
@@ -166,16 +166,16 @@ SimEmulator::deriveBIP32MasterSeed3G(const Block128& rand,
 
 std::tuple<std::array<uint8_t, 8>, std::array<uint8_t, 16>,
            std::array<uint8_t, 16>, std::array<uint8_t, 6>>
-SimEmulator::authenticate3G(const Block128 &rand,
-                            const Block128 &autn,
-                            const Block128 &k,
-                            const Block128 &opc,
+SmileSeedDerivation::authenticate3G(const array16 &rand,
+                            const array16 &autn,
+                            const array16 &k,
+                            const array16 &opc,
                             const std::array<uint8_t, 2> &amf)
 {
     // Inputs are fixed-size arrays; sizes are guaranteed at compile time.
-    const Block128 &RAND = rand;
-    const Block128 &K = k;
-    const Block128 &OPc = opc;
+    const array16 &RAND = rand;
+    const array16 &K = k;
+    const array16 &OPc = opc;
 
     // --- Split AUTN fields ---
     std::array<uint8_t, 6> sqn_xor_ak{};
@@ -188,7 +188,7 @@ SimEmulator::authenticate3G(const Block128 &rand,
 
     // --- Step 1: Derive RES, CK, IK, AK from RAND ---
     std::array<uint8_t, 8> RES{};
-    Block128 CK{}, IK{};
+    array16 CK{}, IK{};
     std::array<uint8_t, 6> AK{}, AKstar{};
     f2345(K, RAND, OPc, RES, CK, IK, AK, AKstar);
 
@@ -204,10 +204,10 @@ SimEmulator::authenticate3G(const Block128 &rand,
     // --- Step 4: Compute expected MAC-A using f1() ---
     std::array<uint8_t, 8> MAC_A{}, MAC_S{};
     // f1 expects AMF as 16 bytes or padded block; zero-pad to 16
-    Block128 AMF_block{};
+    array16 AMF_block{};
     std::copy(amf.begin(), amf.end(), AMF_block.begin());
 
-    Block128 SQN_block{};
+    array16 SQN_block{};
     std::copy(SQN.begin(), SQN.end(), SQN_block.begin());
     f1(K, RAND, SQN_block, AMF_block, OPc, MAC_A, MAC_S);
 
@@ -219,11 +219,11 @@ SimEmulator::authenticate3G(const Block128 &rand,
 }
 
 
-std::pair<std::array<uint8_t, 8>, Block256>
-SimEmulator::authenticate4G(const Block128 &rand,
-                            const Block128 &autn,
-                            const Block128 &k,
-                            const Block128 &opc,
+std::pair<std::array<uint8_t, 8>, array256>
+SmileSeedDerivation::authenticate4G(const array16 &rand,
+                            const array16 &autn,
+                            const array16 &k,
+                            const array16 &opc,
                             const std::array<uint8_t, 2> &amf,
                             const std::string &snn) {
     // Step 1: Perform 3G AKA
@@ -255,7 +255,7 @@ SimEmulator::authenticate4G(const Block128 &rand,
     s.push_back(static_cast<uint8_t>(L1 & 0xFF));
 
     // Step 4: HMAC-SHA-256 key derivation
-    Block256 k_asme{};
+    array256 k_asme{};
     unsigned int k_asme_len = 0;
 
     if (!HMAC(EVP_sha256(), kdf_key.data(), static_cast<int>(kdf_key.size()),
@@ -271,11 +271,11 @@ SimEmulator::authenticate4G(const Block128 &rand,
     return {res, k_asme};
 }
 
-std::pair<std::array<uint8_t, 16>, Block256>
-SimEmulator::authenticate5G(const Block128 &rand,
-                            const Block128 &autn,
-                            const Block128 &k,
-                            const Block128 &opc,
+std::pair<std::array<uint8_t, 16>, array256>
+SmileSeedDerivation::authenticate5G(const array16 &rand,
+                            const array16 &autn,
+                            const array16 &k,
+                            const array16 &opc,
                             const std::array<uint8_t, 2> &amf,
                             const std::string &snn) {
     // Step 1: Perform 3G AKA → RES, CK, IK, AK
@@ -307,7 +307,7 @@ SimEmulator::authenticate5G(const Block128 &rand,
     s_kausf.insert(s_kausf.end(), sqn_xor_ak.begin(), sqn_xor_ak.end());
     append_len(s_kausf, sqn_xor_ak.size());
 
-    Block256 k_ausf{};
+    array256 k_ausf{};
     unsigned int k_ausf_len = 0;
     if (!HMAC(EVP_sha256(), ck_ik.data(), static_cast<int>(ck_ik.size()),
               s_kausf.data(), s_kausf.size(), k_ausf.data(), &k_ausf_len) ||
@@ -322,7 +322,7 @@ SimEmulator::authenticate5G(const Block128 &rand,
     s_kseaf.insert(s_kseaf.end(), snn.begin(), snn.end());
     append_len(s_kseaf, snn.size());
 
-    Block256 k_seaf{};
+    array256 k_seaf{};
     unsigned int k_seaf_len = 0;
     if (!HMAC(EVP_sha256(), k_ausf.data(), static_cast<int>(k_ausf.size()),
               s_kseaf.data(), s_kseaf.size(), k_seaf.data(), &k_seaf_len) ||
@@ -357,11 +357,11 @@ SimEmulator::authenticate5G(const Block128 &rand,
 }
 
 
-Block256
-SimEmulator::deriveBIP32MasterSeed4G(const Block128& rand,
-                          const Block128& autn,
-                          const Block128& k,
-                          const Block128& opc,
+array256
+SmileSeedDerivation::deriveBIP32MasterSeed4G(const array16& rand,
+                          const array16& autn,
+                          const array16& k,
+                          const array16& opc,
                           const std::array<uint8_t, 2>& amf,
                           const std::string& snn)
 {
@@ -389,11 +389,11 @@ SimEmulator::deriveBIP32MasterSeed4G(const Block128& rand,
 
 
 
-Block256
-SimEmulator::deriveBIP32MasterSeed5G(const Block128& rand,
-                          const Block128& autn,
-                          const Block128& k,
-                          const Block128& opc,
+array256
+SmileSeedDerivation::deriveBIP32MasterSeed5G(const array16& rand,
+                          const array16& autn,
+                          const array16& k,
+                          const array16& opc,
                           const std::array<uint8_t, 2>& amf,
                           const std::string& snn)
 {

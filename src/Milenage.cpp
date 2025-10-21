@@ -7,7 +7,7 @@
 
 
 // Rotate left a 128-bit block by ‘bits’ bits
-static void rol128(const Block128 &in, int bits, Block128 &out) {
+static void rol128(const array16 &in, int bits, array16 &out) {
     assert(bits >= 0 && bits < 128);
     int byteShift = bits / 8;
     int bitShift  = bits % 8;
@@ -24,7 +24,7 @@ static void rol128(const Block128 &in, int bits, Block128 &out) {
 }
 
 // AES encrypt a single 128-bit block with key K
-static void aes128_ecb(const Block128 &K, const Block128 &in, Block128 &out) {
+static void aes128_ecb(const array16 &K, const array16 &in, array16 &out) {
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     assert(ctx != nullptr);
     int len = 0;
@@ -37,26 +37,26 @@ static void aes128_ecb(const Block128 &K, const Block128 &in, Block128 &out) {
 }
 
 // XOR two 128-bit blocks
-static void xor128(const Block128 &a, const Block128 &b, Block128 &out) {
+static void xor128(const array16 &a, const array16 &b, array16 &out) {
     for (int i = 0; i < 16; ++i) {
         out[i] = a[i] ^ b[i];
     }
 }
 
-void deriveOpc(const Block128 &K, const Block128 &OP, Block128 &OPc) {
-    Block128 tmp;
+void deriveOpc(const array16 &K, const array16 &OP, array16 &OPc) {
+    array16 tmp;
     aes128_ecb(K, OP, tmp);
     xor128(tmp, OP, OPc);
 }
 
-void f1(const Block128 &K, const Block128 &RAND,
-        const Block128 &SQN, const Block128 &AMF,
-        const Block128 &OPc,
+void f1(const array16 &K, const array16 &RAND,
+        const array16 &SQN, const array16 &AMF,
+        const array16 &OPc,
         std::array<uint8_t, 8> &MAC_A, std::array<uint8_t, 8> &MAC_S)
 {
     static const int r1 = 64;
     static const int r1star = 64; // often same as r1, spec may allow different
-    Block128 temp, in1, out1;
+    array16 temp, in1, out1;
 
     xor128(RAND, OPc, temp);
     aes128_ecb(K, temp, out1);
@@ -79,9 +79,9 @@ void f1(const Block128 &K, const Block128 &RAND,
     for (int i = 0; i < 8; ++i) MAC_S[i] = out1[i];
 }
 
-void f2345(const Block128 &K, const Block128 &RAND, const Block128 &OPc,
+void f2345(const array16 &K, const array16 &RAND, const array16 &OPc,
            std::array<uint8_t, 8> &RES,
-           Block128 &CK, Block128 &IK,
+           array16 &CK, array16 &IK,
            std::array<uint8_t, 6> &AK, std::array<uint8_t, 6> &AKstar)
 {
     static const int r2 = 0;
@@ -89,7 +89,7 @@ void f2345(const Block128 &K, const Block128 &RAND, const Block128 &OPc,
     static const int r4 = 64;
     static const int r5 = 96;
 
-    Block128 temp, out2, in2;
+    array16 temp, out2, in2;
 
     xor128(RAND, OPc, temp);
     aes128_ecb(K, temp, out2);

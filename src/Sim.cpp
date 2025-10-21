@@ -1,5 +1,5 @@
 #include "Sim.h"
-#include "SimEmulator.h"
+#include "SmileSeedDerivation.h"
 #include <iostream>
 
 SIM::SIM() : cardCtx_(nullptr), cardHandle_(nullptr) {}

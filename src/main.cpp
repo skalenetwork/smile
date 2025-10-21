@@ -26,7 +26,7 @@ int main() {
     auto prk = hkdf_extract(salt, Z);
     auto seed_vec = hkdf_expand(prk, "SMILE|AKA->BIP|seed|v1", 32);
 
-    Block256 seed;
+    array256 seed;
     std::copy(seed_vec.begin(), seed_vec.end(), seed.begin());
 
     Wallet::deriveMaster(seed);

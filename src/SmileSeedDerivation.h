@@ -3,7 +3,96 @@
 
 #include "Milenage.h"
 
-class SimEmulator {
+class SmileSeedDerivation {
+
+
+    /**
+     * @brief Derives a 256-bit seed from 2G authentication outputs.
+     *
+     * This function performs a 2G authentication and then securely hashes the resulting
+     * SRES and Kc values using SHA-256 to produce a 256-bit seed.
+     *
+     * @param rand A 16-byte (128-bit) random challenge from the network.
+     * @param ki A 16-byte (128-bit) secret key stored on the SIM card.
+     * @return A 256-bit (32-byte) seed as a std::array.
+     */
+    static array256 deriveBIP32MasterSeed2G(const array16& rand, const array16& ki);
+
+    /**
+ * @brief Derives a 256-bit seed from 3G AKA outputs (RES, CK, IK).
+ *
+ * How it works:
+ * 1) Invokes authenticate3G(rand, autn, k, opc, amf). On success this verifies AUTN
+ *    (MAC-A check) and returns the tuple (RES[8], CK[16], IK[16], AK[6]).
+ * 2) Builds a domain-separated message M = prefix || RES || CK || IK where:
+ *      - prefix = ASCII string "SMILE|3G|seed|v1" used to prevent cross-protocol
+ *        or cross-version collisions (i.e., the same values used elsewhere will not
+ *        accidentally hash to the same seed).
+ *      - AK is intentionally excluded because it masks SQN and is not used as keying material.
+ * 3) Computes seed = SHA-256(M) and returns the 32-byte digest as Block256.
+ *
+ * Properties and notes:
+ * - Deterministic: identical inputs yield the same seed; any input change flips the seed.
+ * - authenticate3G throws if AUTN verification fails; this function propagates that error.
+ * - No state is stored; inputs are not modified.
+ *
+ * @param rand 16-byte random challenge RAND from the network.
+ * @param autn 16-byte AUTN token containing SQN⊕AK || AMF || MAC-A.
+ * @param k 16-byte subscriber key K.
+ * @param opc 16-byte operator variant constant OPc.
+ * @param amf 2-byte AMF used by Milenage f1/f1*.
+ * @return 32-byte seed (SHA-256 digest) as Block256.
+ * @throws std::runtime_error if AKA verification or hashing fails.
+ */
+    static array256 deriveBIP32MasterSeed3G(const array16& rand, const array16& autn,
+                                 const array16& k, const array16& opc,
+                                 const std::array<uint8_t,2>& amf);
+
+    /**
+     * @brief Derives a 256-bit seed from 4G EPS-AKA outputs (RES, K_ASME).
+     *
+     * This function invokes authenticate4G to run 3G AKA and LTE key derivation, obtaining
+     * the 8-byte RES and the 32-byte K_ASME. It then computes:
+     *   seed = SHA-256( "SMILE|4G|seed|v1" || RES || K_ASME )
+     * and returns the 32-byte digest.
+     *
+     * @param rand 16-byte RAND from the network.
+     * @param autn 16-byte AUTN token.
+     * @param k 16-byte subscriber key K.
+     * @param opc 16-byte operator variant constant OPc.
+     * @param amf 2-byte AMF.
+     * @param snn Serving Network Name (string) for 4G KDF.
+     * @return 32-byte seed (SHA-256 digest) as Block256.
+     */
+    static array256 deriveBIP32MasterSeed4G(const array16& rand, const array16& autn,
+                                 const array16& k, const array16& opc,
+                                 const std::array<uint8_t,2>& amf,
+                                 const std::string& snn);
+
+    /**
+ * @brief Derives a 256-bit seed from 5G AKA outputs (RES*, K_SEAF).
+ *
+ * This function invokes authenticate5G to obtain the 16-byte RES* and the 32-byte K_SEAF.
+ * It then computes a domain-separated seed using HKDF-SHA256 as follows:
+ *   - salt = SHA-256( snn || "|SMILE|5G|v1" )
+ *   - PRK = HKDF-Extract(salt, K_SEAF)
+ *   - seed = HKDF-Expand(PRK, info = "SMILE|5G|seed|v1", L = 32)
+ * The result is returned as a 32-byte Block256.
+ *
+ * @param rand 16-byte RAND from the network.
+ * @param autn 16-byte AUTN token.
+ * @param k 16-byte subscriber key K.
+ * @param opc 16-byte operator variant constant OPc.
+ * @param amf 2-byte AMF.
+ * @param snn Serving Network Name.
+ * @return 32-byte seed (HKDF-SHA256) as Block256.
+ */
+    static array256 deriveBIP32MasterSeed5G(const array16& rand, const array16& autn,
+                                 const array16& k, const array16& opc,
+                                 const std::array<uint8_t,2>& amf,
+                                 const std::string& snn);
+
+
 public:
     /**
      * @brief Performs 2G (GSM) authentication (A3/A8) using a COMP128-1 implementation.
@@ -26,19 +115,8 @@ public:
      * @return A pair containing the 4-byte SRES and the 8-byte Kc.
      */
     static std::pair<std::array<uint8_t,4>, std::array<uint8_t,8>>
-    authenticate2G(const Block128& rand, const Block128& ki);
+    authenticate2G(const array16& rand, const array16& ki);
 
-    /**
-     * @brief Derives a 256-bit seed from 2G authentication outputs.
-     *
-     * This function performs a 2G authentication and then securely hashes the resulting
-     * SRES and Kc values using SHA-256 to produce a 256-bit seed.
-     *
-     * @param rand A 16-byte (128-bit) random challenge from the network.
-     * @param ki A 16-byte (128-bit) secret key stored on the SIM card.
-     * @return A 256-bit (32-byte) seed as a std::array.
-     */
-    static Block256 deriveBIP32MasterSeed2G(const Block128& rand, const Block128& ki);
 
     /**
      * @brief Performs 3G (UMTS) Authentication and Key Agreement (AKA) with Milenage.
@@ -81,38 +159,10 @@ public:
      * @see 3GPP TS 33.102; 3GPP TS 35.205/35.206/35.207.
      */
     static std::tuple<std::array<uint8_t,8>, std::array<uint8_t,16>, std::array<uint8_t,16>, std::array<uint8_t,6>>
-    authenticate3G(const Block128& rand, const Block128& autn,
-                   const Block128& k, const Block128& opc, const std::array<uint8_t,2>& amf);
+    authenticate3G(const array16& rand, const array16& autn,
+                   const array16& k, const array16& opc, const std::array<uint8_t,2>& amf);
 
-    /**
-     * @brief Derives a 256-bit seed from 3G AKA outputs (RES, CK, IK).
-     *
-     * How it works:
-     * 1) Invokes authenticate3G(rand, autn, k, opc, amf). On success this verifies AUTN
-     *    (MAC-A check) and returns the tuple (RES[8], CK[16], IK[16], AK[6]).
-     * 2) Builds a domain-separated message M = prefix || RES || CK || IK where:
-     *      - prefix = ASCII string "SMILE|3G|seed|v1" used to prevent cross-protocol
-     *        or cross-version collisions (i.e., the same values used elsewhere will not
-     *        accidentally hash to the same seed).
-     *      - AK is intentionally excluded because it masks SQN and is not used as keying material.
-     * 3) Computes seed = SHA-256(M) and returns the 32-byte digest as Block256.
-     *
-     * Properties and notes:
-     * - Deterministic: identical inputs yield the same seed; any input change flips the seed.
-     * - authenticate3G throws if AUTN verification fails; this function propagates that error.
-     * - No state is stored; inputs are not modified.
-     *
-     * @param rand 16-byte random challenge RAND from the network.
-     * @param autn 16-byte AUTN token containing SQN⊕AK || AMF || MAC-A.
-     * @param k 16-byte subscriber key K.
-     * @param opc 16-byte operator variant constant OPc.
-     * @param amf 2-byte AMF used by Milenage f1/f1*.
-     * @return 32-byte seed (SHA-256 digest) as Block256.
-     * @throws std::runtime_error if AKA verification or hashing fails.
-     */
-    static Block256 deriveBIP32MasterSeed3G(const Block128& rand, const Block128& autn,
-                                 const Block128& k, const Block128& opc,
-                                 const std::array<uint8_t,2>& amf);
+
 
     /**
      * @brief Performs 4G (LTE) Evolved Packet System AKA (EPS‑AKA) and derives K_ASME.
@@ -140,31 +190,12 @@ public:
      * @param snn The Serving Network Name (SNN/SN id) used by the EPS KDF per TS 33.401.
      * @return A pair containing the 8-byte RES and the 32-byte K_ASME.
      */
-    static std::pair<std::array<uint8_t,8>, Block256>
-    authenticate4G(const Block128& rand, const Block128& autn,
-                   const Block128& k, const Block128& opc, const std::array<uint8_t,2>& amf,
+    static std::pair<std::array<uint8_t,8>, array256>
+    authenticate4G(const array16& rand, const array16& autn,
+                   const array16& k, const array16& opc, const std::array<uint8_t,2>& amf,
                    const std::string& snn);
 
-    /**
-     * @brief Derives a 256-bit seed from 4G EPS-AKA outputs (RES, K_ASME).
-     *
-     * This function invokes authenticate4G to run 3G AKA and LTE key derivation, obtaining
-     * the 8-byte RES and the 32-byte K_ASME. It then computes:
-     *   seed = SHA-256( "SMILE|4G|seed|v1" || RES || K_ASME )
-     * and returns the 32-byte digest.
-     *
-     * @param rand 16-byte RAND from the network.
-     * @param autn 16-byte AUTN token.
-     * @param k 16-byte subscriber key K.
-     * @param opc 16-byte operator variant constant OPc.
-     * @param amf 2-byte AMF.
-     * @param snn Serving Network Name (string) for 4G KDF.
-     * @return 32-byte seed (SHA-256 digest) as Block256.
-     */
-    static Block256 deriveBIP32MasterSeed4G(const Block128& rand, const Block128& autn,
-                                 const Block128& k, const Block128& opc,
-                                 const std::array<uint8_t,2>& amf,
-                                 const std::string& snn);
+
 
     /**
      * @brief Performs 5G authentication and key agreement (5G-AKA) with cited standards.
@@ -203,33 +234,11 @@ public:
      * @param snn Serving Network Name used as KDF context (per 3GPP TS 33.501 Annex A).
      * @return Pair of {RES* (16 bytes), K_SEAF (32 bytes)}.
      */
-    static std::pair<std::array<uint8_t,16>, Block256>
-    authenticate5G(const Block128& rand, const Block128& autn,
-                   const Block128& k, const Block128& opc, const std::array<uint8_t,2>& amf,
+    static std::pair<std::array<uint8_t,16>, array256>
+    authenticate5G(const array16& rand, const array16& autn,
+                   const array16& k, const array16& opc, const std::array<uint8_t,2>& amf,
                    const std::string& snn);
 
-    /**
-     * @brief Derives a 256-bit seed from 5G AKA outputs (RES*, K_SEAF).
-     *
-     * This function invokes authenticate5G to obtain the 16-byte RES* and the 32-byte K_SEAF.
-     * It then computes a domain-separated seed using HKDF-SHA256 as follows:
-     *   - salt = SHA-256( snn || "|SMILE|5G|v1" )
-     *   - PRK = HKDF-Extract(salt, K_SEAF)
-     *   - seed = HKDF-Expand(PRK, info = "SMILE|5G|seed|v1", L = 32)
-     * The result is returned as a 32-byte Block256.
-     *
-     * @param rand 16-byte RAND from the network.
-     * @param autn 16-byte AUTN token.
-     * @param k 16-byte subscriber key K.
-     * @param opc 16-byte operator variant constant OPc.
-     * @param amf 2-byte AMF.
-     * @param snn Serving Network Name.
-     * @return 32-byte seed (HKDF-SHA256) as Block256.
-     */
-    static Block256 deriveBIP32MasterSeed5G(const Block128& rand, const Block128& autn,
-                                 const Block128& k, const Block128& opc,
-                                 const std::array<uint8_t,2>& amf,
-                                 const std::string& snn);
 
     /**
      * @brief HKDF-SHA256 per RFC 5869: Extract-and-Expand to 32 bytes.
@@ -279,7 +288,7 @@ public:
      * - The output length here is fixed to 32 bytes (HashLen). If you need a different length,
      *   you would adjust L accordingly during the Expand phase.
      */
-    Block256 rfc5869Hkdf(const std::vector<uint8_t>& ikm,
+    array256 static rfc5869Hkdf(const std::vector<uint8_t>& ikm,
                             std::string_view salt,
                             std::string_view info);
 

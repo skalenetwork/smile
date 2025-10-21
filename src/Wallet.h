@@ -16,9 +16,9 @@ public:
      * @return A pair containing the 32-byte master private key and the 32-byte chain code.
      */
 
-    static std::pair<Block256, Block256> deriveMaster(const Block256& seed);
+    static std::pair<array256, array256> deriveMaster(const array256& seed);
 
-    static bool isValidKey(const Block256& privkey);
+    static bool isValidKey(const array256& privkey);
 
 
 };

@@ -12,14 +12,14 @@
 
 
 // The order of the secp256k1 curve
-static const Block256 SECP256K1_ORDER = {
+static const array256 SECP256K1_ORDER = {
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
     0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
     0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B,
     0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
 };
 
-bool Wallet::isValidKey(const Block256& privkey) {
+bool Wallet::isValidKey(const array256& privkey) {
     if (std::all_of(privkey.begin(), privkey.end(), [](uint8_t b){ return b == 0; }))
         return false;
 
@@ -30,7 +30,7 @@ bool Wallet::isValidKey(const Block256& privkey) {
     return false; // equal to n is invalid
 }
 
-std::pair<Block256, Block256> Wallet::deriveMaster(const Block256& seed) {
+std::pair<array256, array256> Wallet::deriveMaster(const array256& seed) {
     static constexpr char key[] = "Bitcoin seed";
     unsigned int outlen = 64;
     std::array<uint8_t, 64> out{};
@@ -46,7 +46,7 @@ std::pair<Block256, Block256> Wallet::deriveMaster(const Block256& seed) {
         throw std::runtime_error("HMAC-SHA512 failed");
     }
 
-    Block256 privkey, chaincode;
+    array256 privkey, chaincode;
     std::memcpy(privkey.data(), out.data(), 32);
     std::memcpy(chaincode.data(), out.data() + 32, 32);
 
