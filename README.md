@@ -101,7 +101,7 @@ cmake .. && make
 
 ## Overview
 
-`SmileSeedDerivation` provides a unified cryptographic abstraction for deriving **256-bit deterministic master seeds** (e.g., for BIP-32 hierarchical key systems) directly from cellular authentication primitives across multiple generations — **2G (GSM)**, **3G (UMTS-AKA)**, **4G (EPS-AKA)**, and **5G (5G-AKA)**.
+`SmileSeedDerivation` provides a unified cryptographic abstraction for deriving **32-byte deterministic master seeds** (e.g., for BIP-32 hierarchical key systems) directly from cellular authentication primitives across multiple generations — **2G (GSM)**, **3G (UMTS-AKA)**, **4G (EPS-AKA)**, and **5G (5G-AKA)**.
 
 Each generation uses the same conceptual structure:
 
