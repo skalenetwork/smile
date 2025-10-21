@@ -65,7 +65,7 @@ Your phone number is now your wallet identity.
 - [Using `Bip32Wallet` Class](#using-bip32wallet-class)
     - [`deriveWalletPrivateKey`](#derivewalletprivatekey)
     - [`computePublicKeyFromPrivate`](#computepublickeyfromprivate)
-- [Spec: SMILE BIP32 Master Seed Derivation](#spec-bip32-master-seed-derivation-using-cellular-authentication-2g5g)
+- [Mathematical Spec: SMILE BIP32 Master Seed Derivation](#spec-bip32-master-seed-derivation-using-cellular-authentication-2g5g)
     - [1. Overview](#1-overview)
     - [2. Notation](#2-notation)
     - [3. Cryptographic Framework](#3-cryptographic-framework)
@@ -357,7 +357,7 @@ Computes a **compressed public key** (33 bytes) from a given private key.
 
 
 
-# Spec: SMILE BIP32 Master Seed Derivation
+# Mathematical Spec: SMILE BIP32 Master Seed Derivation
 
 **Standards:**
 - 3GPP TS 33.102 (3G Security Architecture)
