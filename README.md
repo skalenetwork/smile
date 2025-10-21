@@ -6,7 +6,7 @@
 
 
 
-# 😄 SMILE — SIM Mobile Identity for Ledgers
+# SMILE — SIM Mobile Identity for Ledgers
 
 **Turn your SIM card into a crypto wallet. No applets. No passwords. No KYC.**
 
