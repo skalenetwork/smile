@@ -10,7 +10,7 @@
 #include <string>
 #include <utility>
 #include <vector>
-
+#include <cstring>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/kdf.h>
