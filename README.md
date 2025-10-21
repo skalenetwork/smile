@@ -2,16 +2,22 @@
   <img src="smile.png" alt="SMILE" width="25%" />
 </p>
 
-<h1 align="center">SMILE Protocol - SIM Mobile Identity for Ledgers</h1>
 
-Use blockchain and x402 protocol using SIM card identity for secure wallets.
+
+
 
 # 😄 SMILE — SIM Mobile Identity for Ledgers
 
 **Turn your SIM card into a crypto wallet. No applets. No passwords. No KYC.**
 
-SMILE is a new protocol that **derives blockchain wallets directly from SIM cards** —  
-using only standard telecom APIs and cryptography you already trust.
+
+SMILE is a breakthrough protocol that derives blockchain wallets directly from SIM cards,
+using only standard telecom APIs and the trusted cryptography already built into mobile networks.
+
+With SMILE, your SIM card becomes a secure, self-sovereign blockchain identity —
+seamlessly integrated with the x402 protocol to enable trustless transactions, instant onboarding, 
+and hardware-grade wallet security.
+
 
 > 🔐 Your phone number is now your wallet identity.
 
