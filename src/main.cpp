@@ -1,6 +1,6 @@
 #include "Sim.h"
 #include "kdf.h"
-#include "Wallet.h"
+#include "Bip32Wallet.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <iomanip>
@@ -29,7 +29,7 @@ int main() {
     array256 seed;
     std::copy(seed_vec.begin(), seed_vec.end(), seed.begin());
 
-    Wallet::deriveMaster(seed);
+    Bip32Wallet::deriveBIPMasterKey(seed);
     sim.disconnect();
 
     nlohmann::json j;

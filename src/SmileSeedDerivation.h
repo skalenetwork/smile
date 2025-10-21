@@ -29,7 +29,7 @@ class SmileSeedDerivation {
  *        or cross-version collisions (i.e., the same values used elsewhere will not
  *        accidentally hash to the same seed).
  *      - AK is intentionally excluded because it masks SQN and is not used as keying material.
- * 3) Computes seed = SHA-256(M) and returns the 32-byte digest as Block256.
+ * 3) Computes seed = SHA-256(M) and returns the 32-byte digest as array256.
  *
  * Properties and notes:
  * - Deterministic: identical inputs yield the same seed; any input change flips the seed.
@@ -41,7 +41,7 @@ class SmileSeedDerivation {
  * @param k 16-byte subscriber key K.
  * @param opc 16-byte operator variant constant OPc. Fixed per operator.
  * @param amf 2-byte AMF used by Milenage f1/f1*. Fixed per operator.
- * @return 32-byte seed (SHA-256 digest) as Block256.
+ * @return 32-byte BIP 32 master seed (SHA-256 digest) as array256.
  * @throws std::runtime_error if AKA verification or hashing fails.
  */
     static array256 deriveBIP32MasterSeed3G(const array16 &rand, const array16 &autn,
@@ -62,7 +62,7 @@ class SmileSeedDerivation {
      * @param opc 16-byte operator variant constant OPc. Fixed per operator.
      * @param amf 2-byte AMF. Fixed per operator.
      * @param snn Serving Network Name (string) for 4G KDF. Fixed per operator.
-     * @return 32-byte seed (SHA-256 digest) as Block256.
+     * @return 32-byte BIP 32 master   as array256.
      */
     static array256 deriveBIP32MasterSeed4G(const array16 &rand, const array16 &autn,
                                             const array16 &k, const array16 &opc,
@@ -77,7 +77,7 @@ class SmileSeedDerivation {
  *   - salt = SHA-256( snn || "|SMILE|5G|v1" )
  *   - PRK = HKDF-Extract(salt, K_SEAF)
  *   - seed = HKDF-Expand(PRK, info = "SMILE|5G|seed|v1", L = 32)
- * The result is returned as a 32-byte Block256.
+ * The result is returned as a 32-byte array256.
  *
  * @param rand 16-byte RAND from the network.
  * @param autn 16-byte AUTN token.
@@ -85,7 +85,7 @@ class SmileSeedDerivation {
  * @param opc 16-byte operator variant constant OPc. Fixed per operator.
  * @param amf 2-byte AMF. Fixed per operator.
  * @param snn Serving Network Name. Fixed per operator.
- * @return 32-byte seed (HKDF-SHA256) as Block256.
+ * @return 32-byte seed (HKDF-SHA256) as array256.
  */
     static array256 deriveBIP32MasterSeed5G(const array16 &rand, const array16 &autn,
                                             const array16 &k, const array16 &opc,
@@ -244,7 +244,7 @@ private:
      * - Implements the two-stage HKDF construction defined in RFC 5869 using SHA-256:
      *   1) HKDF-Extract(salt, IKM) -> PRK (a 32-byte pseudorandom key)
      *   2) HKDF-Expand(PRK, info, L=32) -> OKM (output keying material)
-     * - Returns OKM as a 32-byte Block256.
+     * - Returns OKM as a 32-byte array256.
      *
      * Parameter roles:
      * - ikm: Input Keying Material (arbitrary-length secret bytes). In 5G code paths this is
@@ -270,7 +270,7 @@ private:
      *   * Create a new HKDF context and set SHA-256 again.
      *   * Feed the PRK as the HKDF key (per OpenSSL's API design).
      *   * Add the info string with EVP_PKEY_CTX_add1_hkdf_info.
-     *   * Derive exactly 32 bytes of OKM into the output Block256.
+     *   * Derive exactly 32 bytes of OKM into the output array256.
      * - On success, securely cleanse the temporary PRK buffer with OPENSSL_cleanse.
      *
      * Error handling and safety:

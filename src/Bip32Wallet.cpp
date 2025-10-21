@@ -1,4 +1,4 @@
-#include "Wallet.h"
+#include "Bip32Wallet.h"
 #include "common.h"
 #include <iostream>
 #include <iomanip>
@@ -19,7 +19,7 @@ static const array256 SECP256K1_ORDER = {
     0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
 };
 
-bool Wallet::isValidKey(const array256& privkey) {
+bool Bip32Wallet::isValidKey(const array256& privkey) {
     if (std::all_of(privkey.begin(), privkey.end(), [](uint8_t b){ return b == 0; }))
         return false;
 
@@ -30,7 +30,7 @@ bool Wallet::isValidKey(const array256& privkey) {
     return false; // equal to n is invalid
 }
 
-std::pair<array256, array256> Wallet::deriveMaster(const array256& seed) {
+std::pair<array256, array256> Bip32Wallet::deriveBIPMasterKey(const array256& seed) {
     static constexpr char key[] = "Bitcoin seed";
     unsigned int outlen = 64;
     std::array<uint8_t, 64> out{};
