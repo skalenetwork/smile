@@ -49,9 +49,9 @@ and hardware-grade wallet security.
 
 ### 🔐 How SMILE Derives a Wallet
 
-📶 **SIM AUTHENTICATE(RAND, AUTN)**  
+📶 **AKA SIM AUTHENTICATE(RAND, AUTN)**  
 ⬇️  
-🔑 **CK ∥ IK (or K_AUSF)** — keying material from 3G/4G/5G AKA  
+🔑 ** Take 2G/3G/4G/5G AKA AKA output as keying material ffor HKDF**   
 ⬇️  
 🧮 **HKDF** — derive pseudorandom seed  
 ⬇️  
