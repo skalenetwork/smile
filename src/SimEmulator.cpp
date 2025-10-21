@@ -12,6 +12,10 @@
 #include "Aka2G.h"
 
 
+using Block128 = std::array<uint8_t, 16>;
+using Block256 = std::array<uint8_t, 32>;
+
+
 std::pair<std::array<uint8_t, 4>, std::array<uint8_t, 8> >
 SimEmulator::authenticate2G(const Block128 &rand,
                             const Block128 &ki) {
@@ -21,60 +25,136 @@ SimEmulator::authenticate2G(const Block128 &rand,
     return {sres, kc};
 }
 
+#include <openssl/evp.h>
+#include <openssl/kdf.h>
+
 Block256
-SimEmulator::deriveSeed2G(const Block128 &rand,
-                          const Block128 &ki) {
-    // Inputs are fixed-size arrays; no length checks needed beyond compile-time size.
+SimEmulator::deriveSeed2G(const Block128 &rand, const Block128 &ki) {
     auto [sres, kc] = authenticate2G(rand, ki);
 
-    // Domain-separate by prefixing with a fixed context string before hashing.
     constexpr std::string_view prefix = "SMILE|3G|seed|v1";
 
+    // Input key material (SRES || Kc)
+    std::vector<uint8_t> ikm;
+    ikm.insert(ikm.end(), sres.begin(), sres.end());
+    ikm.insert(ikm.end(), kc.begin(), kc.end());
 
-    // Build input: prefix || SRES (4 bytes) || Kc (8 bytes)
-    std::vector<uint8_t> material;
-    material.insert(material.end(), prefix.begin(), prefix.end());
-    material.insert(material.end(), sres.begin(), sres.end());
-    material.insert(material.end(), kc.begin(), kc.end());
+    const uint8_t* salt = reinterpret_cast<const uint8_t*>(prefix.data());
+    size_t salt_len = prefix.size();
 
     Block256 seed{};
-    unsigned int out_len = 0;
-    if (!EVP_Digest(material.data(), material.size(), seed.data(), &out_len, EVP_sha256(), nullptr))
-        throw std::runtime_error("deriveSeed2G: SHA-256 failed");
+    EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
+    if (!pctx)
+        throw std::runtime_error("deriveSeed2G: failed to create HKDF context");
+
+    if (EVP_PKEY_derive_init(pctx) <= 0 ||
+        EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256()) <= 0 ||
+        EVP_PKEY_CTX_set1_hkdf_salt(pctx, salt, salt_len) <= 0 ||
+        EVP_PKEY_CTX_set1_hkdf_key(pctx, ikm.data(), ikm.size()) <= 0 ||
+        EVP_PKEY_CTX_add1_hkdf_info(
+            pctx,
+            reinterpret_cast<const unsigned char*>(prefix.data()),
+            static_cast<int>(prefix.size())
+        ) <= 0)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        throw std::runtime_error("deriveSeed2G: HKDF parameter setup failed");
+    }
+
+    size_t out_len = seed.size();
+    if (EVP_PKEY_derive(pctx, seed.data(), &out_len) <= 0) {
+        EVP_PKEY_CTX_free(pctx);
+        throw std::runtime_error("deriveSeed2G: HKDF derive failed");
+    }
+
+    EVP_PKEY_CTX_free(pctx);
     if (out_len != seed.size())
-        throw std::runtime_error("deriveSeed2G: unexpected digest length");
+        throw std::runtime_error("deriveSeed2G: unexpected output size");
 
     return seed;
 }
 
-Block256
-SimEmulator::deriveSeed3G(const Block128 &rand,
-                          const Block128 &autn,
-                          const Block128 &k,
-                          const Block128 &opc,
-                          const std::array<uint8_t, 2> &amf) {
-    // Run 3G AKA to obtain RES (8), CK (16), IK (16), AK (6)
+
+
+#include <openssl/evp.h>
+#include <openssl/kdf.h>
+
+Block256 SimEmulator::deriveSeed3G(const Block128& rand,
+                                   const Block128& autn,
+                                   const Block128& k,
+                                   const Block128& opc,
+                                   const std::array<uint8_t, 2>& amf)
+{
+    // 1️⃣ Run 3G AKA to obtain RES (8), CK (16), IK (16), AK (6)
     auto [res, ck, ik, ak] = authenticate3G(rand, autn, k, opc, amf);
 
-    // Domain separation prefix
-    constexpr std::string_view prefix = "SMILE|3G|seed|v1";
+    // 2️⃣ Combine CK||IK as high-entropy input keying material (IKM)
+    std::vector<uint8_t> ikm;
+    ikm.reserve(ck.size() + ik.size());
+    ikm.insert(ikm.end(), ck.begin(), ck.end());
+    ikm.insert(ikm.end(), ik.begin(), ik.end());
 
-    // Build input: prefix || RES || CK || IK
-    std::vector<uint8_t> material;
-    material.insert(material.end(), prefix.begin(), prefix.end());
-    material.insert(material.end(), res.begin(), res.end());
-    material.insert(material.end(), ck.begin(), ck.end());
-    material.insert(material.end(), ik.begin(), ik.end());
+    // 3️⃣ Compute context hash for salt (optional binding)
+    //     ctx = RAND || AUTN || "SMILE|3G|v1"
+    std::vector<uint8_t> ctx;
+    ctx.insert(ctx.end(), rand.begin(), rand.end());
+    ctx.insert(ctx.end(), autn.begin(), autn.end());
+    constexpr std::string_view ctx_label = "SMILE|3G|v1";
+    ctx.insert(ctx.end(), ctx_label.begin(), ctx_label.end());
 
+    unsigned char salt_hash[EVP_MAX_MD_SIZE];
+    unsigned int salt_len = 0;
+    if (!EVP_Digest(ctx.data(), ctx.size(), salt_hash, &salt_len, EVP_sha256(), nullptr))
+        throw std::runtime_error("deriveSeed3G: context hash failed");
+
+    // 4️⃣ HKDF-Extract: PRK = HMAC-SHA256(salt=H(ctx), ikm=CK||IK)
+    unsigned char prk[32];
+    size_t prk_len = sizeof(prk);  // ✅ FIX: must use a variable, not a temporary
+    EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
+    if (!pctx) throw std::runtime_error("deriveSeed3G: EVP_PKEY_CTX_new_id failed");
+
+    if (EVP_PKEY_derive_init(pctx) <= 0 ||
+        EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256()) <= 0 ||
+        EVP_PKEY_CTX_set1_hkdf_salt(pctx, salt_hash, salt_len) <= 0 ||
+        EVP_PKEY_CTX_set1_hkdf_key(pctx, ikm.data(), ikm.size()) <= 0 ||
+        EVP_PKEY_derive(pctx, prk, &prk_len) <= 0)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        throw std::runtime_error("deriveSeed3G: HKDF-Extract failed");
+    }
+    EVP_PKEY_CTX_free(pctx);
+
+    // 5️⃣ HKDF-Expand: Seed = HKDF-Expand(PRK, info="SMILE|3G|seed|v1", L=32)
+    constexpr std::string_view info = "SMILE|3G|seed|v1";
     Block256 seed{};
-    unsigned int out_len = 0;
-    if (!EVP_Digest(material.data(), material.size(), seed.data(), &out_len, EVP_sha256(), nullptr))
-        throw std::runtime_error("deriveSeed3G: SHA-256 failed");
-    if (out_len != seed.size())
-        throw std::runtime_error("deriveSeed3G: unexpected digest length");
+    EVP_PKEY_CTX* ectx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
+    if (!ectx) throw std::runtime_error("deriveSeed3G: EVP_PKEY_CTX_new_id failed (expand)");
+
+    if (EVP_PKEY_derive_init(ectx) <= 0 ||
+        EVP_PKEY_CTX_set_hkdf_md(ectx, EVP_sha256()) <= 0 ||
+        EVP_PKEY_CTX_set1_hkdf_key(ectx, prk, prk_len) <= 0 ||
+        EVP_PKEY_CTX_add1_hkdf_info(
+            ectx,
+            reinterpret_cast<const unsigned char*>(info.data()),
+            static_cast<int>(info.size())
+        ) <= 0)
+    {
+        EVP_PKEY_CTX_free(ectx);
+        throw std::runtime_error("deriveSeed3G: HKDF-Expand setup failed");
+    }
+
+    size_t out_len = seed.size();
+    if (EVP_PKEY_derive(ectx, seed.data(), &out_len) <= 0 || out_len != seed.size())
+    {
+        EVP_PKEY_CTX_free(ectx);
+        throw std::runtime_error("deriveSeed3G: HKDF-Expand failed");
+    }
+    EVP_PKEY_CTX_free(ectx);
 
     return seed;
 }
+
+
 
 std::tuple<std::array<uint8_t, 8>, std::array<uint8_t, 16>,
     std::array<uint8_t, 16>, std::array<uint8_t, 6> >
@@ -255,3 +335,77 @@ SimEmulator::authenticate5G(const Block128 &rand,
 
     return {res_star, k_seaf};
 }
+
+
+#include <openssl/evp.h>
+#include <openssl/kdf.h>
+
+Block256 SimEmulator::deriveSeed4G(const Block128& rand,
+                                   const Block128& autn,
+                                   const Block128& k,
+                                   const Block128& opc,
+                                   const std::array<uint8_t, 2>& amf,
+                                   const std::string& snn)
+{
+    // 1️⃣ Run LTE/EPS-AKA to obtain RES (8) and K_ASME (32)
+    auto [res, k_asme] = authenticate4G(rand, autn, k, opc, amf, snn);
+
+    // 2️⃣ Build public context for salt binding
+    //     ctx = snn || "SMILE|4G|v1"
+    std::string ctx = snn + "|SMILE|4G|v1";
+    unsigned char ctx_hash[EVP_MAX_MD_SIZE];
+    unsigned int ctx_hash_len = 0;
+    if (!EVP_Digest(ctx.data(), ctx.size(), ctx_hash, &ctx_hash_len, EVP_sha256(), nullptr))
+        throw std::runtime_error("deriveSeed4G: context hash failed");
+
+    // 3️⃣ HKDF-Extract: PRK = HMAC-SHA256(salt = H(ctx), ikm = K_ASME)
+    unsigned char prk[32];
+    size_t prk_len = sizeof(prk);  // ✅ FIX: must be a variable, not a temporary
+    EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
+    if (!pctx)
+        throw std::runtime_error("deriveSeed4G: EVP_PKEY_CTX_new_id failed");
+
+    if (EVP_PKEY_derive_init(pctx) <= 0 ||
+        EVP_PKEY_CTX_set_hkdf_md(pctx, EVP_sha256()) <= 0 ||
+        EVP_PKEY_CTX_set1_hkdf_salt(pctx, ctx_hash, ctx_hash_len) <= 0 ||
+        EVP_PKEY_CTX_set1_hkdf_key(pctx, k_asme.data(), k_asme.size()) <= 0 ||
+        EVP_PKEY_derive(pctx, prk, &prk_len) <= 0)
+    {
+        EVP_PKEY_CTX_free(pctx);
+        throw std::runtime_error("deriveSeed4G: HKDF-Extract failed");
+    }
+    EVP_PKEY_CTX_free(pctx);
+
+    // 4️⃣ HKDF-Expand: Seed = HKDF-Expand(PRK, info = "SMILE|4G|seed|v1", L = 32)
+    constexpr std::string_view info = "SMILE|4G|seed|v1";
+    Block256 seed{};
+    EVP_PKEY_CTX* ectx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
+    if (!ectx)
+        throw std::runtime_error("deriveSeed4G: EVP_PKEY_CTX_new_id failed (expand)");
+
+    if (EVP_PKEY_derive_init(ectx) <= 0 ||
+        EVP_PKEY_CTX_set_hkdf_md(ectx, EVP_sha256()) <= 0 ||
+        EVP_PKEY_CTX_set1_hkdf_key(ectx, prk, prk_len) <= 0 ||
+        EVP_PKEY_CTX_add1_hkdf_info(
+            ectx,
+            reinterpret_cast<const unsigned char*>(info.data()),
+            static_cast<int>(info.size())
+        ) <= 0)
+    {
+        EVP_PKEY_CTX_free(ectx);
+        throw std::runtime_error("deriveSeed4G: HKDF-Expand setup failed");
+    }
+
+    size_t out_len = seed.size();
+    if (EVP_PKEY_derive(ectx, seed.data(), &out_len) <= 0 || out_len != seed.size())
+    {
+        EVP_PKEY_CTX_free(ectx);
+        throw std::runtime_error("deriveSeed4G: HKDF-Expand failed");
+    }
+    EVP_PKEY_CTX_free(ectx);
+
+    return seed;
+}
+
+
+

@@ -10,10 +10,14 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <cstring>
+#include <array>
+#include <string>
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/kdf.h>
+#include <openssl/evp.h>
+
+
 
 using Block32 = std::array<uint8_t, 4>;
 using Block64 = std::array<uint8_t, 8>;

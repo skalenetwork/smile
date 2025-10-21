@@ -103,6 +103,27 @@ public:
                    const std::string& snn);
 
     /**
+     * @brief Derives a 256-bit seed from 4G EPS-AKA outputs (RES, K_ASME).
+     *
+     * This function invokes authenticate4G to run 3G AKA and LTE key derivation, obtaining
+     * the 8-byte RES and the 32-byte K_ASME. It then computes:
+     *   seed = SHA-256( "SMILE|4G|seed|v1" || RES || K_ASME )
+     * and returns the 32-byte digest.
+     *
+     * @param rand 16-byte RAND from the network.
+     * @param autn 16-byte AUTN token.
+     * @param k 16-byte subscriber key K.
+     * @param opc 16-byte operator variant constant OPc.
+     * @param amf 2-byte AMF.
+     * @param snn Serving Network Name (string) for 4G KDF.
+     * @return 32-byte seed (SHA-256 digest) as Block256.
+     */
+    static Block256 deriveSeed4G(const Block128& rand, const Block128& autn,
+                                 const Block128& k, const Block128& opc,
+                                 const std::array<uint8_t,2>& amf,
+                                 const std::string& snn);
+
+    /**
      * @brief Performs 5G authentication and key agreement (5G-AKA).
      *
      * This function simulates the 5G AKA procedure as specified in 3GPP TS 33.501. It starts
