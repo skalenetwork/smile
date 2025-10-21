@@ -16,7 +16,7 @@ class SmileSeedDerivation {
      * @param ki A 16-byte (128-bit) secret key stored on the SIM card.
      * @return A 256-bit (32-byte) seed as a std::array.
      */
-    static array256 deriveBIP32MasterSeed2G(const array16 &rand, const array16 &ki);
+    static array32 deriveBIP32MasterSeed2G(const array16 &rand, const array16 &ki);
 
     /**
  * @brief Derives a 256-bit seed from 3G AKA outputs (RES, CK, IK).
@@ -44,7 +44,7 @@ class SmileSeedDerivation {
  * @return 32-byte BIP 32 master seed (SHA-256 digest) as array256.
  * @throws std::runtime_error if AKA verification or hashing fails.
  */
-    static array256 deriveBIP32MasterSeed3G(const array16 &rand, const array16 &autn,
+    static array32 deriveBIP32MasterSeed3G(const array16 &rand, const array16 &autn,
                                             const array16 &k, const array16 &opc,
                                             const array2 &amf);
 
@@ -64,7 +64,7 @@ class SmileSeedDerivation {
      * @param snn Serving Network Name (string) for 4G KDF. Fixed per operator.
      * @return 32-byte BIP 32 master   as array256.
      */
-    static array256 deriveBIP32MasterSeed4G(const array16 &rand, const array16 &autn,
+    static array32 deriveBIP32MasterSeed4G(const array16 &rand, const array16 &autn,
                                             const array16 &k, const array16 &opc,
                                             const array2 &amf,
                                             const std::string &snn);
@@ -87,7 +87,7 @@ class SmileSeedDerivation {
  * @param snn Serving Network Name. Fixed per operator.
  * @return 32-byte seed (HKDF-SHA256) as array256.
  */
-    static array256 deriveBIP32MasterSeed5G(const array16 &rand, const array16 &autn,
+    static array32 deriveBIP32MasterSeed5G(const array16 &rand, const array16 &autn,
                                             const array16 &k, const array16 &opc,
                                             const array2 &amf,
                                             const std::string &snn);
@@ -188,7 +188,7 @@ private:
      * @param snn The Serving Network Name (SNN/SN id) used by the EPS KDF per TS 33.401.
      * @return A pair containing the 8-byte RES and the 32-byte K_ASME.
      */
-    static std::pair<std::array<uint8_t, 8>, array256>
+    static std::pair<std::array<uint8_t, 8>, array32>
     authenticate4G(const array16 &rand, const array16 &autn,
                    const array16 &k, const array16 &opc, const std::array<uint8_t, 2> &amf,
                    const std::string &snn);
@@ -231,7 +231,7 @@ private:
      * @param snn Serving Network Name used as KDF context (per 3GPP TS 33.501 Annex A).
      * @return Pair of {RES* (16 bytes), K_SEAF (32 bytes)}.
      */
-    static std::pair<std::array<uint8_t, 16>, array256>
+    static std::pair<std::array<uint8_t, 16>, array32>
     authenticate5G(const array16 &rand, const array16 &autn,
                    const array16 &k, const array16 &opc, const std::array<uint8_t, 2> &amf,
                    const std::string &snn);
@@ -285,7 +285,7 @@ private:
      * - The output length here is fixed to 32 bytes (HashLen). If you need a different length,
      *   you would adjust L accordingly during the Expand phase.
      */
-    array256 static rfc5869Hkdf(const std::vector<uint8_t> &ikm,
+    array32 static rfc5869Hkdf(const std::vector<uint8_t> &ikm,
                                 std::string_view salt,
                                 std::string_view info);
 };

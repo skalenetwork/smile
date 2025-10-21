@@ -11,11 +11,11 @@
 
 
 
-array256 SmileSeedDerivation::rfc5869Hkdf(const std::vector<uint8_t>& ikm,
+array32 SmileSeedDerivation::rfc5869Hkdf(const std::vector<uint8_t>& ikm,
                             std::string_view salt,
                             std::string_view info)
 {
-    array256 out{};
+    array32 out{};
     unsigned char prk[32];
     size_t prk_len = sizeof(prk);
 
@@ -107,7 +107,7 @@ SmileSeedDerivation::authenticate2G(const array16 &rand,
 
 
 
-array256
+array32
 SmileSeedDerivation::deriveBIP32MasterSeed2G(const array16 &rand, const array16 &ki)
 {
     // 1️⃣ Run 2G AKA to obtain SRES (4 bytes) and Kc (8 bytes)
@@ -129,7 +129,7 @@ SmileSeedDerivation::deriveBIP32MasterSeed2G(const array16 &rand, const array16 
 
 
 
-array256
+array32
 SmileSeedDerivation::deriveBIP32MasterSeed3G(const array16& rand,
                           const array16& autn,
                           const array16& k,
@@ -218,7 +218,7 @@ SmileSeedDerivation::authenticate3G(const array16 &rand,
 }
 
 
-std::pair<std::array<uint8_t, 8>, array256>
+std::pair<std::array<uint8_t, 8>, array32>
 SmileSeedDerivation::authenticate4G(const array16 &rand,
                             const array16 &autn,
                             const array16 &k,
@@ -254,7 +254,7 @@ SmileSeedDerivation::authenticate4G(const array16 &rand,
     s.push_back(static_cast<uint8_t>(L1 & 0xFF));
 
     // Step 4: HMAC-SHA-256 key derivation
-    array256 k_asme{};
+    array32 k_asme{};
     unsigned int k_asme_len = 0;
 
     if (!HMAC(EVP_sha256(), kdf_key.data(), static_cast<int>(kdf_key.size()),
@@ -270,7 +270,7 @@ SmileSeedDerivation::authenticate4G(const array16 &rand,
     return {res, k_asme};
 }
 
-std::pair<std::array<uint8_t, 16>, array256>
+std::pair<std::array<uint8_t, 16>, array32>
 SmileSeedDerivation::authenticate5G(const array16 &rand,
                             const array16 &autn,
                             const array16 &k,
@@ -306,7 +306,7 @@ SmileSeedDerivation::authenticate5G(const array16 &rand,
     s_kausf.insert(s_kausf.end(), sqn_xor_ak.begin(), sqn_xor_ak.end());
     append_len(s_kausf, sqn_xor_ak.size());
 
-    array256 k_ausf{};
+    array32 k_ausf{};
     unsigned int k_ausf_len = 0;
     if (!HMAC(EVP_sha256(), ck_ik.data(), static_cast<int>(ck_ik.size()),
               s_kausf.data(), s_kausf.size(), k_ausf.data(), &k_ausf_len) ||
@@ -321,7 +321,7 @@ SmileSeedDerivation::authenticate5G(const array16 &rand,
     s_kseaf.insert(s_kseaf.end(), snn.begin(), snn.end());
     append_len(s_kseaf, snn.size());
 
-    array256 k_seaf{};
+    array32 k_seaf{};
     unsigned int k_seaf_len = 0;
     if (!HMAC(EVP_sha256(), k_ausf.data(), static_cast<int>(k_ausf.size()),
               s_kseaf.data(), s_kseaf.size(), k_seaf.data(), &k_seaf_len) ||
@@ -356,7 +356,7 @@ SmileSeedDerivation::authenticate5G(const array16 &rand,
 }
 
 
-array256
+array32
 SmileSeedDerivation::deriveBIP32MasterSeed4G(const array16& rand,
                           const array16& autn,
                           const array16& k,
@@ -388,7 +388,7 @@ SmileSeedDerivation::deriveBIP32MasterSeed4G(const array16& rand,
 
 
 
-array256
+array32
 SmileSeedDerivation::deriveBIP32MasterSeed5G(const array16& rand,
                           const array16& autn,
                           const array16& k,

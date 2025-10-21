@@ -126,7 +126,7 @@ Each generation uses the same conceptual structure:
 ## `deriveBIP32MasterSeed2G`
 
 ```cpp
-static array256 deriveBIP32MasterSeed2G(const array16 &rand, const array16 &ki);
+static array32 deriveBIP32MasterSeed2G(const array16 &rand, const array16 &ki);
 ```
 
 ### Description
@@ -150,7 +150,7 @@ Derives a **256-bit BIP-32 master seed** from GSM (2G) authentication results.
 ## `deriveBIP32MasterSeed3G`
 
 ```cpp
-static array256 deriveBIP32MasterSeed3G(
+static array32 deriveBIP32MasterSeed3G(
     const array16 &rand,
     const array16 &autn,
     const array16 &k,
@@ -184,7 +184,7 @@ from the authentication results (RES, CK, IK).
 ## `deriveBIP32MasterSeed4G`
 
 ```cpp
-static array256 deriveBIP32MasterSeed4G(
+static array32 deriveBIP32MasterSeed4G(
     const array16 &rand,
     const array16 &autn,
     const array16 &k,
@@ -218,7 +218,7 @@ Derives a  **256-bit BIP-32 master seed** from LTE/EPS-AKA authentication result
 ## `deriveBIP32MasterSeed5G`
 
 ```cpp
-static array256 deriveBIP32MasterSeed5G(
+static array32 deriveBIP32MasterSeed5G(
     const array16 &rand,
     const array16 &autn,
     const array16 &k,
