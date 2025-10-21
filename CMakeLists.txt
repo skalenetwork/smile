@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(smile-demo LANGUAGES C CXX)
+project(smile LANGUAGES C CXX)
 
 set(CMAKE_TOOLCHAIN_FILE
         "${CMAKE_CURRENT_SOURCE_DIR}/external/vcpkg/scripts/buildsystems/vcpkg.cmake"
@@ -17,17 +17,12 @@ endif()
 find_package(OpenSSL REQUIRED)
 find_package(nlohmann_json REQUIRED)
 
+file(GLOB SRC_FILES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+add_executable(smile ${SRC_FILES})
 
-add_executable(smile-demo
-        src/main.cpp
-        src/sim.cpp
-        src/smile_kdf.cpp
-        src/wallet.cpp
-)
+target_include_directories(smile PRIVATE src external/libbtc/include)
 
-target_include_directories(smile-demo PRIVATE src external/libbtc/include)
-
-target_link_libraries(smile-demo
+target_link_libraries(smile
         OpenSSL::Crypto
         nlohmann_json::nlohmann_json
 )

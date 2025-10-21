@@ -1,9 +1,9 @@
-#include "smile_kdf.h"
+#include "kdf.h"
 #include <openssl/kdf.h>
 #include <openssl/evp.h>
 #include <stdexcept>
 
-std::vector<uint8_t> smile_hkdf_extract(const std::vector<uint8_t>& salt,
+std::vector<uint8_t> hkdf_extract(const std::vector<uint8_t>& salt,
                                         const std::vector<uint8_t>& ikm) {
     EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);
     if (!pctx) throw std::runtime_error("EVP_PKEY_CTX_new_id failed");
@@ -23,7 +23,7 @@ std::vector<uint8_t> smile_hkdf_extract(const std::vector<uint8_t>& salt,
     return prk;
 }
 
-std::vector<uint8_t> smile_hkdf_expand(const std::vector<uint8_t>& prk,
+std::vector<uint8_t> hkdf_expand(const std::vector<uint8_t>& prk,
                                        const std::string& info,
                                        size_t L) {
     EVP_PKEY_CTX* pctx = EVP_PKEY_CTX_new_id(EVP_PKEY_HKDF, nullptr);

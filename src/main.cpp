@@ -1,12 +1,12 @@
-#include "sim.h"
-#include "smile_kdf.h"
-#include "wallet.h"
+#include "Sim.h"
+#include "kdf.h"
+#include "Wallet.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <iomanip>
 
 int main() {
-    SmileSIM sim;
+    SIM sim;
     if (!sim.connect()) {
         std::cerr << "Failed to connect to SIM.\n";
         return 1;
@@ -23,10 +23,10 @@ int main() {
     Z.insert(Z.end(), aka->ik.begin(), aka->ik.end());
 
     std::vector<uint8_t> salt = {0x00};
-    auto prk = smile_hkdf_extract(salt, Z);
-    auto seed = smile_hkdf_expand(prk, "SMILE|AKA->BIP|seed|v1", 64);
+    auto prk = hkdf_extract(salt, Z);
+    auto seed = hkdf_expand(prk, "SMILE|AKA->BIP|seed|v1", 64);
 
-    SmileWallet::derive_master(seed);
+    Wallet::derive_master(seed);
     sim.disconnect();
 
     nlohmann::json j;

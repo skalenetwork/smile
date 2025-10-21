@@ -1,15 +1,16 @@
-#include "sim.h"
+#include "Sim.h"
+#include "SimEmulator.h"
 #include <iostream>
 
-SmileSIM::SmileSIM() : cardCtx_(nullptr), cardHandle_(nullptr) {}
+SIM::SIM() : cardCtx_(nullptr), cardHandle_(nullptr) {}
 
-bool SmileSIM::connect() {
+bool SIM::connect() {
     std::cout << "[SMILE] Connecting to SIM via PC/SC...\n";
     // TODO: Use SCardEstablishContext + SCardConnect
     return true;
 }
 
-std::optional<AKAResult> SmileSIM::authenticate(const std::vector<uint8_t>& rand,
+std::optional<AKAResult> SIM::authenticate(const std::vector<uint8_t>& rand,
                                                 const std::vector<uint8_t>& autn) {
     std::cout << "[SMILE] Performing AUTHENTICATE(RAND, AUTN)...\n";
 
@@ -21,7 +22,7 @@ std::optional<AKAResult> SmileSIM::authenticate(const std::vector<uint8_t>& rand
     return result;
 }
 
-void SmileSIM::disconnect() {
+void SIM::disconnect() {
     std::cout << "[SMILE] Disconnecting.\n";
     // TODO: SCardDisconnect + SCardReleaseContext
 }

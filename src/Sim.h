@@ -9,9 +9,9 @@ struct AKAResult {
     std::vector<uint8_t> ik;
 };
 
-class SmileSIM {
+class SIM {
 public:
-    SmileSIM();
+    SIM();
     bool connect();
     std::optional<AKAResult> authenticate(const std::vector<uint8_t>& rand,
                                           const std::vector<uint8_t>& autn);

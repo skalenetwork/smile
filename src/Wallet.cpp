@@ -1,4 +1,4 @@
-#include "wallet.h"
+#include "Wallet.h"
 #include <iostream>
 #include <iomanip>
 #include <openssl/hmac.h>
@@ -25,7 +25,7 @@ static std::pair<std::vector<uint8_t>, std::vector<uint8_t>> bip32_master_key(co
     return {privkey, chaincode};
 }
 
-void SmileWallet::derive_master(const std::vector<uint8_t>& seed) {
+void Wallet::derive_master(const std::vector<uint8_t>& seed) {
     auto [privkey, chaincode] = bip32_master_key(seed);
     std::cout << "[SMILE] Derived master key (BIP-32):\n";
     print_hex("privkey", privkey);
