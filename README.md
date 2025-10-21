@@ -25,7 +25,6 @@ and hardware-grade wallet security.
 Your phone number is now your wallet identity.
 
 
-<details>
 <summary><strong>Table of Contents</strong></summary>
 
 - [What SMILE Does](#what-smile-does)
@@ -54,7 +53,6 @@ Your phone number is now your wallet identity.
   - [11. Security Level Summary](#11-security-level-summary)
   - [12. Final Formula Summary](#12-final-formula-summary)
 
-</details>
 
 
 ---
