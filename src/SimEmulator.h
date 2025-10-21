@@ -52,6 +52,16 @@ public:
                    const Block128& k, const Block128& opc, const std::array<uint8_t,2>& amf);
 
     /**
+     * @brief Derives a 256-bit seed from 3G AKA outputs (RES, CK, IK).
+     *
+     * Runs 3G AKA via authenticate3G and hashes a domain-separated concatenation
+     * of the outputs (RES || CK || IK) with SHA-256 to produce a 256-bit seed.
+     */
+    static Block256 deriveSeed3G(const Block128& rand, const Block128& autn,
+                                 const Block128& k, const Block128& opc,
+                                 const std::array<uint8_t,2>& amf);
+
+    /**
      * @brief Performs 4G (LTE) Evolved Packet System (EPS) authentication (EPS-AKA).
      *
      * This function builds on 3G AKA to perform 4G authentication. It takes the same parameters
