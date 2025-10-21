@@ -119,10 +119,10 @@ Each generation uses the same conceptual structure:
 
 | Function | Input | Core Algorithm | Output |
 |-----------|--------|----------------|---------|
-| `deriveBIP32MasterSeed2G` | RAND, Ki | COMP128-1 → SHA-256(SRES ‖ Kc) | 256-bit seed |
-| `deriveBIP32MasterSeed3G` | RAND, AUTN, K, OPc, AMF | Milenage → SHA-256(RES ‖ CK ‖ IK) | 256-bit seed |
-| `deriveBIP32MasterSeed4G` | RAND, AUTN, K, OPc, AMF, SNN | EPS-AKA KDF → SHA-256(RES ‖ K_ASME) | 256-bit seed |
-| `deriveBIP32MasterSeed5G` | RAND, AUTN, K, OPc, AMF, SNN | 5G-AKA KDF → HKDF-SHA-256(K_SEAF) | 256-bit seed |
+| `deriveBIP32MasterSeed2G` | RAND, Ki | COMP128-1 → SHA-256(SRES ‖ Kc) | 32-byte seed |
+| `deriveBIP32MasterSeed3G` | RAND, AUTN, K, OPc, AMF | Milenage → SHA-256(RES ‖ CK ‖ IK) | 32-byte seed |
+| `deriveBIP32MasterSeed4G` | RAND, AUTN, K, OPc, AMF, SNN | EPS-AKA KDF → SHA-256(RES ‖ K_ASME) | 32-byte seed |
+| `deriveBIP32MasterSeed5G` | RAND, AUTN, K, OPc, AMF, SNN | 5G-AKA KDF → HKDF-SHA-256(K_SEAF) | 32-byte seed |
 
 ---
 
@@ -133,7 +133,7 @@ static array32 deriveBIP32MasterSeed2G(const array16 &rand, const array16 &ki);
 ```
 
 ### Description
-Derives a **256-bit BIP-32 master seed** from GSM (2G) authentication results.
+Derives a **32-byte BIP-32 master seed** from GSM (2G) authentication results.
 
 ### Parameters
 | Name | Size | Description |
@@ -162,7 +162,7 @@ static array32 deriveBIP32MasterSeed3G(
 ```
 
 ### Description
-Implements **3G/UMTS-AKA** (Authentication and Key Agreement), and derives a  **256-bit BIP-32 master seed** 
+Implements **3G/UMTS-AKA** (Authentication and Key Agreement), and derives a  **32-byte BIP-32 master seed** 
 from the authentication results (RES, CK, IK).
 
 
@@ -197,7 +197,7 @@ static array32 deriveBIP32MasterSeed4G(
 ```
 
 ### Description
-Derives a  **256-bit BIP-32 master seed** from LTE/EPS-AKA authentication results (RES, K_ASME).
+Derives a  **32-byte BIP-32 master seed** from LTE/EPS-AKA authentication results (RES, K_ASME).
 
 ### Parameters
 | Name | Description |
@@ -231,7 +231,7 @@ static array32 deriveBIP32MasterSeed5G(
 ```
 
 ### Description
-Computes a  **256-bit BIP-32 master seed**  from 5G-AKA authentication results (`RES*`, `K_SEAF`).
+Computes a  **32-byte BIP-32 master seed**  from 5G-AKA authentication results (`RES*`, `K_SEAF`).
 
 ### Parameters
 | Name | Description |
@@ -307,7 +307,7 @@ Derives a **child private key** from a given 32-byte BIP32 seed, following the s
 
 | Name | Type | Description |
 |------|------|--------------|
-| `seed` | `array32` | 256-bit BIP32 master seed |
+| `seed` | `array32` | 32-byte BIP32 master seed |
 | `index` | `uint32_t` | Child index; bit 31 (0x80000000) selects hardened derivation. Default = `0` |
 
 ### Returns
@@ -456,7 +456,7 @@ Seed_2G = HKDF_SHA256(IKM_2G, Salt, Info)
 
 ### 4.5. Output
 
-- 256-bit (32-byte) seed suitable as BIP32 master seed.
+- 32-byte (32-byte) seed suitable as BIP32 master seed.
 - Entropy source limited (~96 bits), so use only for deterministic derivations, not high-assurance wallet seeds.
 
 ---
@@ -496,7 +496,7 @@ Seed_3G = HKDF_SHA256(IKM_3G, Salt_3G, "SMILE|3G|seed|v1")
 
 ### 5.5. Output
 
-- 256-bit BIP32 seed with high entropy (~256 bits).
+- 32-byte BIP32 seed with high entropy (~256 bits).
 - Combines network challenge RAND with key material for domain separation.
 
 ---
@@ -535,7 +535,7 @@ Seed_4G = HKDF_SHA256(IKM_4G, Salt_4G, "SMILE|4G|seed|v1")
 
 ### 6.5. Output
 
-- 256-bit BIP32 seed.
+- 32-byte BIP32 seed.
 - Strong cryptographic entropy, sourced from LTE authentication hierarchy.
 - Safe for generating HD wallet roots tied to mobile identity.
 
@@ -573,7 +573,7 @@ Seed_5G = HKDF_SHA256(IKM_5G, Salt_5G, "SMILE|5G|seed|v1")
 
 ### 7.5. Output
 
-- 256-bit master seed (BIP32 m/ root).
+- 32-byte master seed (BIP32 m/ root).
 - Entropy sourced from 5G key hierarchy (K_SEAF), which derives from K via CK/IK → K_AUSF → K_SEAF.
 - Represents cryptographic coupling between SIM identity and HD wallet seed.
 
