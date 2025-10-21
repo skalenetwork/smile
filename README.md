@@ -34,9 +34,7 @@ Your phone number is now your wallet identity.
 
 - 🧬 **Derives a BIP-32/39 HD wallet** from the SIM’s AKA authentication keys
 - 🛰 **Uses only existing 3G/4G/5G SIM commands** — no Java Card or carrier mods
-- 🤝 **Cooperates with the carrier** for proof-of-presence via RAND/AUTN
 - 🔏 **HKDF → BIP seed → master key** — all on device, zero exposure of Ki or K
-- 🪪 **Optionally carrier-signed tokens (COSE/JWS)** for verifiable attestation
 
 ---
 
@@ -67,7 +65,7 @@ Your phone number is now your wallet identity.
 - [Using `Bip32Wallet` Class](#using-bip32wallet-class)
     - [`deriveWalletPrivateKey`](#derivewalletprivatekey)
     - [`computePublicKeyFromPrivate`](#computepublickeyfromprivate)
-- [Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)](#spec-bip32-master-seed-derivation-using-cellular-authentication-2g5g)
+- [Spec: SMILE BIP32 Master Seed Derivation](#spec-bip32-master-seed-derivation-using-cellular-authentication-2g5g)
     - [1. Overview](#1-overview)
     - [2. Notation](#2-notation)
     - [3. Cryptographic Framework](#3-cryptographic-framework)
@@ -359,7 +357,7 @@ Computes a **compressed public key** (33 bytes) from a given private key.
 
 
 
-# Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)
+# Spec: SMILE BIP32 Master Seed Derivation
 
 **Standards:**
 - 3GPP TS 33.102 (3G Security Architecture)
