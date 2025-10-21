@@ -13,34 +13,53 @@
 
 
 
-std::pair<std::vector<uint8_t>, std::vector<uint8_t>>
-SimEmulator::authenticate2G(const std::vector<uint8_t>& rand,
-                            const std::vector<uint8_t>& ki)
+std::pair<std::array<uint8_t,4>, std::array<uint8_t,8>>
+SimEmulator::authenticate2G(const Block128& rand,
+                            const Block128& ki)
 {
-    std::vector<uint8_t> sres(4);
-    std::vector<uint8_t> kc(8);
+    std::array<uint8_t,4> sres{};
+    std::array<uint8_t,8> kc{};
     Aka2G::runAka(ki.data(), rand.data(), sres.data(), kc.data());
     return {sres, kc};
 }
 
+Block256
+SimEmulator::deriveSeed2G(const Block128& rand,
+                          const Block128& ki)
+{
+    // Inputs are fixed-size arrays; no length checks needed beyond compile-time size.
+    auto [sres, kc] = authenticate2G(rand, ki);
 
-std::tuple<std::vector<uint8_t>, std::vector<uint8_t>,
-           std::vector<uint8_t>, std::vector<uint8_t>>
-SimEmulator::authenticate3G(const std::vector<uint8_t>& rand,
-                            const std::vector<uint8_t>& autn,
-                            const std::vector<uint8_t>& k,
-                            const std::vector<uint8_t>& opc,
-                            const std::vector<uint8_t>& amf)
+    // Concatenate SRES (4 bytes) || Kc (8 bytes)
+    uint8_t material[12];
+    std::memcpy(material, sres.data(), sres.size());
+    std::memcpy(material + sres.size(), kc.data(), kc.size());
+
+    Block256 seed{};
+    unsigned int out_len = 0;
+    if (!EVP_Digest(material, sizeof(material), seed.data(), &out_len, EVP_sha256(), nullptr))
+        throw std::runtime_error("deriveSeed2G: SHA-256 failed");
+    if (out_len != seed.size())
+        throw std::runtime_error("deriveSeed2G: unexpected digest length");
+
+    return seed;
+}
+
+
+std::tuple<std::array<uint8_t,8>, std::array<uint8_t,16>,
+           std::array<uint8_t,16>, std::array<uint8_t,6>>
+SimEmulator::authenticate3G(const Block128& rand,
+                            const Block128& autn,
+                            const Block128& k,
+                            const Block128& opc,
+                            const std::array<uint8_t,2>& amf)
 {
 
-    if (rand.size() != 16 || autn.size() != 16 ||
-        k.size() != 16 || opc.size() != 16 || amf.size() != 2)
-        throw std::invalid_argument("authenticate3G: invalid input sizes");
-
-    Block128 RAND, K, OPc, AMF{};
-    std::copy(rand.begin(), rand.end(), RAND.begin());
-    std::copy(k.begin(), k.end(), K.begin());
-    std::copy(opc.begin(), opc.end(), OPc.begin());
+    // Inputs are fixed-size arrays; sizes are guaranteed at compile time.
+    const Block128& RAND = rand;
+    const Block128& K = k;
+    const Block128& OPc = opc;
+    Block128 AMF{};
     std::copy(amf.begin(), amf.end(), AMF.begin());
 
     // Split AUTN fields: SQN ⊕ AK (6), AMF (2), MAC-A (8)
@@ -68,22 +87,17 @@ SimEmulator::authenticate3G(const std::vector<uint8_t>& rand,
         throw std::runtime_error("3G authentication failed: MAC mismatch");
 
     // --- Step 4: Return success with (RES, CK, IK, AK) ---
-    return {
-        std::vector<uint8_t>(RES.begin(), RES.end()),
-        std::vector<uint8_t>(CK.begin(),  CK.end()),
-        std::vector<uint8_t>(IK.begin(),  IK.end()),
-        std::vector<uint8_t>(AK.begin(),  AK.end())
-    };
+    return { RES, CK, IK, AK };
 }
 
 
 
-std::pair<std::vector<uint8_t>, Block256>
-SimEmulator::authenticate4G(const std::vector<uint8_t>& rand,
-                            const std::vector<uint8_t>& autn,
-                            const std::vector<uint8_t>& k,
-                            const std::vector<uint8_t>& opc,
-                            const std::vector<uint8_t>& amf,
+std::pair<std::array<uint8_t,8>, Block256>
+SimEmulator::authenticate4G(const Block128& rand,
+                            const Block128& autn,
+                            const Block128& k,
+                            const Block128& opc,
+                            const std::array<uint8_t,2>& amf,
                             const std::string& snn)
 {
     // Step 1: Perform 3G AKA
@@ -107,7 +121,8 @@ SimEmulator::authenticate4G(const std::vector<uint8_t>& rand,
     s.push_back(static_cast<uint8_t>(L0 & 0xFF));
 
     // Parameter 1: SQN ⊕ AK (extracted from AUTN)
-    std::vector<uint8_t> sqn_xor_ak(autn.begin(), autn.begin() + 6);
+    std::array<uint8_t,6> sqn_xor_ak{};
+    std::memcpy(sqn_xor_ak.data(), autn.data(), 6);
     const uint16_t L1 = static_cast<uint16_t>(sqn_xor_ak.size());
     s.insert(s.end(), sqn_xor_ak.begin(), sqn_xor_ak.end());
     s.push_back(static_cast<uint8_t>(L1 >> 8));
@@ -130,12 +145,12 @@ SimEmulator::authenticate4G(const std::vector<uint8_t>& rand,
     return {res, k_asme};
 }
 
-std::pair<std::vector<uint8_t>, Block256>
-SimEmulator::authenticate5G(const std::vector<uint8_t>& rand,
-                            const std::vector<uint8_t>& autn,
-                            const std::vector<uint8_t>& k,
-                            const std::vector<uint8_t>& opc,
-                            const std::vector<uint8_t>& amf,
+std::pair<std::array<uint8_t,16>, Block256>
+SimEmulator::authenticate5G(const Block128& rand,
+                            const Block128& autn,
+                            const Block128& k,
+                            const Block128& opc,
+                            const std::array<uint8_t,2>& amf,
                             const std::string& snn)
 {
     // Step 1: Perform 3G AKA → RES, CK, IK, AK
@@ -154,7 +169,8 @@ SimEmulator::authenticate5G(const std::vector<uint8_t>& rand,
     };
 
     // Extract SQN⊕AK from AUTN (first 6 bytes)
-    std::vector<uint8_t> sqn_xor_ak(autn.begin(), autn.begin() + 6);
+    std::array<uint8_t,6> sqn_xor_ak{};
+    std::memcpy(sqn_xor_ak.data(), autn.data(), 6);
 
     // ──────────────────────────────
     // Step 2 – Derive K_AUSF (Annex A.4)
@@ -209,7 +225,8 @@ SimEmulator::authenticate5G(const std::vector<uint8_t>& rand,
         throw std::runtime_error("Failed to derive RES*");
 
     // Rightmost 16 bytes = RES*
-    std::vector<uint8_t> res_star(res_star_full.end() - 16, res_star_full.end());
+    std::array<uint8_t,16> res_star{};
+    std::memcpy(res_star.data(), res_star_full.data() + 16, 16);
 
     return {res_star, k_seaf};
 }

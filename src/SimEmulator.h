@@ -16,8 +16,20 @@ public:
      * @param ki A 16-byte (128-bit) secret key stored on the SIM card.
      * @return A pair containing the 4-byte SRES and the 8-byte Kc.
      */
-    static std::pair<std::vector<uint8_t>, std::vector<uint8_t>>
-    authenticate2G(const std::vector<uint8_t>& rand, const std::vector<uint8_t>& ki);
+    static std::pair<std::array<uint8_t,4>, std::array<uint8_t,8>>
+    authenticate2G(const Block128& rand, const Block128& ki);
+
+    /**
+     * @brief Derives a 256-bit seed from 2G authentication outputs.
+     *
+     * This function performs a 2G authentication and then securely hashes the resulting
+     * SRES and Kc values using SHA-256 to produce a 256-bit seed.
+     *
+     * @param rand A 16-byte (128-bit) random challenge from the network.
+     * @param ki A 16-byte (128-bit) secret key stored on the SIM card.
+     * @return A 256-bit (32-byte) seed as a std::array.
+     */
+    static Block256 deriveSeed2G(const Block128& rand, const Block128& ki);
 
     /**
      * @brief Performs 3G (UMTS) authentication using the Milenage algorithm.
@@ -35,9 +47,9 @@ public:
      * @param amf A 2-byte authentication management field.
      * @return A tuple containing the RES, CK, IK, and AK.
      */
-    static std::tuple<std::vector<uint8_t>, std::vector<uint8_t>, std::vector<uint8_t>, std::vector<uint8_t>>
-    authenticate3G(const std::vector<uint8_t>& rand, const std::vector<uint8_t>& autn,
-                   const std::vector<uint8_t>& k, const std::vector<uint8_t>& opc, const std::vector<uint8_t>& amf);
+    static std::tuple<std::array<uint8_t,8>, std::array<uint8_t,16>, std::array<uint8_t,16>, std::array<uint8_t,6>>
+    authenticate3G(const Block128& rand, const Block128& autn,
+                   const Block128& k, const Block128& opc, const std::array<uint8_t,2>& amf);
 
     /**
      * @brief Performs 4G (LTE) Evolved Packet System (EPS) authentication (EPS-AKA).
@@ -55,9 +67,9 @@ public:
      * @param snn The Serving Network Name, used in the key derivation process.
      * @return A pair containing the 8-byte RES and the 32-byte K_ASME.
      */
-    static std::pair<std::vector<uint8_t>, Block256>
-    authenticate4G(const std::vector<uint8_t>& rand, const std::vector<uint8_t>& autn,
-                   const std::vector<uint8_t>& k, const std::vector<uint8_t>& opc, const std::vector<uint8_t>& amf,
+    static std::pair<std::array<uint8_t,8>, Block256>
+    authenticate4G(const Block128& rand, const Block128& autn,
+                   const Block128& k, const Block128& opc, const std::array<uint8_t,2>& amf,
                    const std::string& snn);
 
     /**
@@ -77,8 +89,8 @@ public:
      * @param snn The Serving Network Name, used in the key derivation process.
      * @return A pair containing the 16-byte RES* and the 32-byte K_SEAF.
      */
-    static std::pair<std::vector<uint8_t>, Block256>
-    authenticate5G(const std::vector<uint8_t>& rand, const std::vector<uint8_t>& autn,
-                   const std::vector<uint8_t>& k, const std::vector<uint8_t>& opc, const std::vector<uint8_t>& amf,
+    static std::pair<std::array<uint8_t,16>, Block256>
+    authenticate5G(const Block128& rand, const Block128& autn,
+                   const Block128& k, const Block128& opc, const std::array<uint8_t,2>& amf,
                    const std::string& snn);
 };
