@@ -129,3 +129,87 @@ SimEmulator::authenticate4G(const std::vector<uint8_t>& rand,
 
     return {res, k_asme};
 }
+
+std::pair<std::vector<uint8_t>, Block256>
+SimEmulator::authenticate5G(const std::vector<uint8_t>& rand,
+                            const std::vector<uint8_t>& autn,
+                            const std::vector<uint8_t>& k,
+                            const std::vector<uint8_t>& opc,
+                            const std::vector<uint8_t>& amf,
+                            const std::string& snn)
+{
+    // Step 1: Perform 3G AKA → RES, CK, IK, AK
+    auto [res, ck, ik, ak] = authenticate3G(rand, autn, k, opc, amf);
+
+    // Base key: CK || IK
+    std::vector<uint8_t> ck_ik;
+    ck_ik.reserve(32);
+    ck_ik.insert(ck_ik.end(), ck.begin(), ck.end());
+    ck_ik.insert(ck_ik.end(), ik.begin(), ik.end());
+
+    // --- Helper lambda to append a 16-bit big-endian length ---
+    auto append_len = [](std::vector<uint8_t>& v, size_t len) {
+        v.push_back(static_cast<uint8_t>((len >> 8) & 0xFF));
+        v.push_back(static_cast<uint8_t>(len & 0xFF));
+    };
+
+    // Extract SQN⊕AK from AUTN (first 6 bytes)
+    std::vector<uint8_t> sqn_xor_ak(autn.begin(), autn.begin() + 6);
+
+    // ──────────────────────────────
+    // Step 2 – Derive K_AUSF (Annex A.4)
+    // S = FC || SNN || L0 || (SQN⊕AK) || L1
+    std::vector<uint8_t> s_kausf;
+    s_kausf.push_back(0x6A);  // FC
+    s_kausf.insert(s_kausf.end(), snn.begin(), snn.end());
+    append_len(s_kausf, snn.size());
+    s_kausf.insert(s_kausf.end(), sqn_xor_ak.begin(), sqn_xor_ak.end());
+    append_len(s_kausf, sqn_xor_ak.size());
+
+    Block256 k_ausf{};
+    unsigned int k_ausf_len = 0;
+    if (!HMAC(EVP_sha256(), ck_ik.data(), static_cast<int>(ck_ik.size()),
+              s_kausf.data(), s_kausf.size(), k_ausf.data(), &k_ausf_len) ||
+        k_ausf_len != 32)
+        throw std::runtime_error("Failed to derive K_AUSF");
+
+    // ──────────────────────────────
+    // Step 3 – Derive K_SEAF (Annex A.5)
+    // S = FC || SNN || L0
+    std::vector<uint8_t> s_kseaf;
+    s_kseaf.push_back(0x6B);
+    s_kseaf.insert(s_kseaf.end(), snn.begin(), snn.end());
+    append_len(s_kseaf, snn.size());
+
+    Block256 k_seaf{};
+    unsigned int k_seaf_len = 0;
+    if (!HMAC(EVP_sha256(), k_ausf.data(), static_cast<int>(k_ausf.size()),
+              s_kseaf.data(), s_kseaf.size(), k_seaf.data(), &k_seaf_len) ||
+        k_seaf_len != 32)
+        throw std::runtime_error("Failed to derive K_SEAF");
+
+    // ──────────────────────────────
+    // Step 4 – Derive RES* (Annex A.6)
+    // S = FC || SNN || L0 || RAND || L1 || RES || L2
+    std::vector<uint8_t> s_res_star;
+    s_res_star.push_back(0x6D);
+    s_res_star.insert(s_res_star.end(), snn.begin(), snn.end());
+    append_len(s_res_star, snn.size());
+    s_res_star.insert(s_res_star.end(), rand.begin(), rand.end());
+    append_len(s_res_star, rand.size());
+    s_res_star.insert(s_res_star.end(), res.begin(), res.end());
+    append_len(s_res_star, res.size());
+
+    std::array<uint8_t, 32> res_star_full{};
+    unsigned int res_star_len = 0;
+    if (!HMAC(EVP_sha256(), ck_ik.data(), static_cast<int>(ck_ik.size()),
+              s_res_star.data(), s_res_star.size(),
+              res_star_full.data(), &res_star_len) ||
+        res_star_len != 32)
+        throw std::runtime_error("Failed to derive RES*");
+
+    // Rightmost 16 bytes = RES*
+    std::vector<uint8_t> res_star(res_star_full.end() - 16, res_star_full.end());
+
+    return {res_star, k_seaf};
+}

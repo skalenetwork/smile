@@ -19,4 +19,10 @@ public:
     authenticate4G(const std::vector<uint8_t>& rand, const std::vector<uint8_t>& autn,
                    const std::vector<uint8_t>& k, const std::vector<uint8_t>& opc, const std::vector<uint8_t>& amf,
                    const std::string& snn);
+
+    // 5G Authentication (5G-AKA)
+    static std::pair<std::vector<uint8_t>, Block256>
+    authenticate5G(const std::vector<uint8_t>& rand, const std::vector<uint8_t>& autn,
+                   const std::vector<uint8_t>& k, const std::vector<uint8_t>& opc, const std::vector<uint8_t>& amf,
+                   const std::string& snn);
 };
