@@ -75,7 +75,6 @@ Each generation uses the same conceptual structure:
 | 4G | TS 33.401 | EPS-AKA KDF → SHA-256 | 32-byte seed |
 | 5G | TS 33.501 | 5G-AKA KDF → HKDF-SHA-256 | 32-byte seed |
 
-All derivations are **deterministic**, **stateless**, and **domain-separated** using versioned ASCII labels (e.g., `"SMILE|4G|seed|v1"`).
 
 ---
 
@@ -106,12 +105,10 @@ Derives a **256-bit BIP-32 master seed** from GSM (2G) authentication results.
 | `ki` | 16 bytes | Subscriber secret key stored on the SIM card (Ki) |
 
 ### Returns
-| Type | Size | Description |
-|-------|------|-------------|
-| `array256` | 32 bytes | Derived seed value suitable as BIP-32 master seed |
+
+- 32-byte seed. Throws exception on failure.
 
 ### Notes
-- Deterministic for fixed `(RAND, Ki)`.
 - COMP128-1 used internally as demonstration; real SIMs may use proprietary A3/A8 variants.
 
 ---
@@ -142,11 +139,7 @@ from the authentication results (RES, CK, IK).
 | `amf` | 2 B | Authentication Management Field (typically 0x8000) |
 
 ### Returns
-- 32-byte SHA-256 digest as `array256`.
-
-### Behavior
-- Throws `std::runtime_error` if MAC-A verification fails.
-- Stateless; excludes AK (anonymity key) from seed input.
+- 32-byte seed. Throws exception on failure.
 
 ### Standards
 - 3GPP TS 33.102 § 6.3
@@ -180,11 +173,7 @@ Derives a  **256-bit BIP-32 master seed** from LTE/EPS-AKA authentication result
 | `snn` | **Serving Network Name** (e.g., `"mnc410.mcc310.3gppnetwork.org"`) |
 
 ### Returns
-- 32-byte SHA-256 digest as `array256`.
-
-### Notes
-- `SNN` introduces domain separation between PLMNs.
-- Used for LTE / EPC key hierarchies where K_ASME anchors all further keys.
+- 32-byte seed. Throws exception on failure.
 
 ### Standards
 - 3GPP TS 33.401 Annex A.2–A.4
@@ -218,7 +207,7 @@ Computes a  **256-bit BIP-32 master seed**  from 5G-AKA authentication results (
 | `snn` | Serving Network Name (as per 3GPP TS 33.501) |
 
 ### Returns
-- 32-byte seed derived via HKDF-SHA256 (RFC 5869).
+- 32-byte seed. Throws exception on failure.
 
 
 ### Standards
