@@ -10,6 +10,9 @@
 // All parameters are 16 bytes (128 bits) unless noted otherwise
 using Block128 = std::array<uint8_t, 16>;
 
+// A 256-bit (32-byte) block, used for K_ASME, etc.
+using Block256 = std::array<uint8_t, 32>;
+
 // Operator‐specific constant OP (16 bytes) and derived OPc.
 void deriveOpc(const Block128 &K, const Block128 &OP, Block128 &OPc);
 

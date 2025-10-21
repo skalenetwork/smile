@@ -75,3 +75,57 @@ SimEmulator::authenticate3G(const std::vector<uint8_t>& rand,
         std::vector<uint8_t>(AK.begin(),  AK.end())
     };
 }
+
+
+
+std::pair<std::vector<uint8_t>, Block256>
+SimEmulator::authenticate4G(const std::vector<uint8_t>& rand,
+                            const std::vector<uint8_t>& autn,
+                            const std::vector<uint8_t>& k,
+                            const std::vector<uint8_t>& opc,
+                            const std::vector<uint8_t>& amf,
+                            const std::string& snn)
+{
+    // Step 1: Perform 3G AKA
+    auto [res, ck, ik, ak] = authenticate3G(rand, autn, k, opc, amf);
+
+    // Step 2: Build KDF key = CK || IK
+    std::vector<uint8_t> kdf_key;
+    kdf_key.reserve(32);
+    kdf_key.insert(kdf_key.end(), ck.begin(), ck.end());
+    kdf_key.insert(kdf_key.end(), ik.begin(), ik.end());
+
+    // Step 3: Construct input string S for KDF (3GPP TS 33.401 §A.2.1)
+    // FC = 0x10 for K_ASME derivation
+    std::vector<uint8_t> s;
+    s.push_back(0x10);
+
+    // Parameter 0: SNN
+    s.insert(s.end(), snn.begin(), snn.end());
+    const uint16_t L0 = static_cast<uint16_t>(snn.size());
+    s.push_back(static_cast<uint8_t>(L0 >> 8));
+    s.push_back(static_cast<uint8_t>(L0 & 0xFF));
+
+    // Parameter 1: SQN ⊕ AK (extracted from AUTN)
+    std::vector<uint8_t> sqn_xor_ak(autn.begin(), autn.begin() + 6);
+    const uint16_t L1 = static_cast<uint16_t>(sqn_xor_ak.size());
+    s.insert(s.end(), sqn_xor_ak.begin(), sqn_xor_ak.end());
+    s.push_back(static_cast<uint8_t>(L1 >> 8));
+    s.push_back(static_cast<uint8_t>(L1 & 0xFF));
+
+    // Step 4: HMAC-SHA-256 key derivation
+    Block256 k_asme{};
+    unsigned int k_asme_len = 0;
+
+    if (!HMAC(EVP_sha256(), kdf_key.data(), static_cast<int>(kdf_key.size()),
+              s.data(), s.size(), k_asme.data(), &k_asme_len))
+        throw std::runtime_error("HMAC computation failed");
+
+    if (k_asme_len != 32)
+        throw std::runtime_error("K_ASME length mismatch");
+
+    // Optional: cleanse sensitive memory
+    // OPENSSL_cleanse(kdf_key.data(), kdf_key.size());
+
+    return {res, k_asme};
+}

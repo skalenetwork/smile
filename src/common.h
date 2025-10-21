@@ -14,3 +14,6 @@
 #include <openssl/evp.h>
 #include <openssl/hmac.h>
 #include <openssl/kdf.h>
+
+using Block128 = std::array<uint8_t, 16>;
+using Block256 = std::array<uint8_t, 32>;
