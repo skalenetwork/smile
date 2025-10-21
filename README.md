@@ -70,10 +70,10 @@ Your phone number is now your wallet identity.
     - [2. Notation](#2-notation)
     - [3. Cryptographic Framework](#3-cryptographic-framework)
         - [3.1. HKDF (RFC 5869)](#31-hkdf-rfc-5869)
-    - [4. 2G: deriveBIP32MasterSeed2G](#4-2g-derivebip32masterseed2g)
-    - [5. 3G: deriveBIP32MasterSeed3G](#5-3g-derivebip32masterseed3g)
-    - [6. 4G: deriveBIP32MasterSeed4G](#6-4g-derivebip32masterseed4g)
-    - [7. 5G: deriveBIP32MasterSeed5G](#7-5g-derivebip32masterseed5g)
+    - [4. deriveBIP32MasterSeed2G](#4-2g-derivebip32masterseed2g)
+    - [5. deriveBIP32MasterSeed3G](#5-3g-derivebip32masterseed3g)
+    - [6. deriveBIP32MasterSeed4G](#6-4g-derivebip32masterseed4g)
+    - [7. deriveBIP32MasterSeed5G](#7-5g-derivebip32masterseed5g)
     - [8. Security Discussion](#8-security-discussion)
     - [9. Example End-to-End Derivation Flow (5G)](#9-example-end-to-end-derivation-flow-5g)
     - [10. Implementation Notes](#10-implementation-notes)
@@ -422,7 +422,7 @@ Seed = OKM[0..31]
 
 ---
 
-## 4. 2G: deriveBIP32MasterSeed2G
+## 4.  deriveBIP32MasterSeed2G
 
 ### 4.1. Authentication Source
 
@@ -461,7 +461,7 @@ Seed_2G = HKDF_SHA256(IKM_2G, Salt, Info)
 
 ---
 
-## 5. 3G: deriveBIP32MasterSeed3G
+## 5. deriveBIP32MasterSeed3G
 
 ### 5.1. Authentication Source
 
@@ -501,7 +501,7 @@ Seed_3G = HKDF_SHA256(IKM_3G, Salt_3G, "SMILE|3G|seed|v1")
 
 ---
 
-## 6. 4G: deriveBIP32MasterSeed4G
+## 6. deriveBIP32MasterSeed4G
 
 ### 6.1. Authentication Source
 
@@ -541,7 +541,7 @@ Seed_4G = HKDF_SHA256(IKM_4G, Salt_4G, "SMILE|4G|seed|v1")
 
 ---
 
-## 7. 5G: deriveBIP32MasterSeed5G
+## 7. deriveBIP32MasterSeed5G
 
 ### 7.1. Authentication Source
 
