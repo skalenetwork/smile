@@ -25,33 +25,6 @@ and hardware-grade wallet security.
 Your phone number is now your wallet identity.
 
 
-<summary><strong>Table of Contents</strong></summary>
-
-- [What SMILE Does](#what-smile-does)
-- [Why It Matters](#why-it-matters)
-- [Reference Implementation](#building-reference-implementation)
-- [`SmileSeedDerivation` Class](#smileseedderivation-class)
-  - [Overview](#overview)
-  - [Public Interface Summary](#public-interface-summary)
-  - [`deriveBIP32MasterSeed2G`](#derivebip32masterseed2g)
-  - [`deriveBIP32MasterSeed3G`](#derivebip32masterseed3g)
-  - [`deriveBIP32MasterSeed4G`](#derivebip32masterseed4g)
-  - [`deriveBIP32MasterSeed5G`](#derivebip32masterseed5g)
-- [References](#references)
-- [Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)](#spec-bip32-master-seed-derivation-using-cellular-authentication-2g5g)
-  - [1. Overview](#1-overview)
-  - [2. Notation](#2-notation)
-  - [3. Cryptographic Framework](#3-cryptographic-framework)
-    - [3.1. HKDF (RFC 5869)](#31-hkdf-rfc-5869)
-  - [4. 2G: deriveBIP32MasterSeed2G](#4-2g-derivebip32masterseed2g)
-  - [5. 3G: deriveBIP32MasterSeed3G](#5-3g-derivebip32masterseed3g)
-  - [6. 4G: deriveBIP32MasterSeed4G](#6-4g-derivebip32masterseed4g)
-  - [7. 5G: deriveBIP32MasterSeed5G](#7-5g-derivebip32masterseed5g)
-  - [8. Security Discussion](#8-security-discussion)
-  - [9. Example End-to-End Derivation Flow (5G)](#9-example-end-to-end-derivation-flow-5g)
-  - [10. Implementation Notes](#10-implementation-notes)
-  - [11. Security Level Summary](#11-security-level-summary)
-  - [12. Final Formula Summary](#12-final-formula-summary)
 
 
 
@@ -75,6 +48,33 @@ Your phone number is now your wallet identity.
 - **Carrier ↔ crypto flywheel**: airtime, rewards, promos → on-chain assets
 - **Signed operations**: firmware updates, door unlocks, telemetry notarization
 
+
+
+<summary><strong>Table of Contents</strong></summary>
+
+- [Building Reference Implementation](#building-reference-implementation)
+- [`SmileSeedDerivation` Class](#smileseedderivation-class)
+    - [Overview](#overview)
+    - [Public Interface Summary](#public-interface-summary)
+    - [`deriveBIP32MasterSeed2G`](#derivebip32masterseed2g)
+    - [`deriveBIP32MasterSeed3G`](#derivebip32masterseed3g)
+    - [`deriveBIP32MasterSeed4G`](#derivebip32masterseed4g)
+    - [`deriveBIP32MasterSeed5G`](#derivebip32masterseed5g)
+- [References](#references)
+- [Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)](#spec-bip32-master-seed-derivation-using-cellular-authentication-2g5g)
+    - [1. Overview](#1-overview)
+    - [2. Notation](#2-notation)
+    - [3. Cryptographic Framework](#3-cryptographic-framework)
+        - [3.1. HKDF (RFC 5869)](#31-hkdf-rfc-5869)
+    - [4. 2G: deriveBIP32MasterSeed2G](#4-2g-derivebip32masterseed2g)
+    - [5. 3G: deriveBIP32MasterSeed3G](#5-3g-derivebip32masterseed3g)
+    - [6. 4G: deriveBIP32MasterSeed4G](#6-4g-derivebip32masterseed4g)
+    - [7. 5G: deriveBIP32MasterSeed5G](#7-5g-derivebip32masterseed5g)
+    - [8. Security Discussion](#8-security-discussion)
+    - [9. Example End-to-End Derivation Flow (5G)](#9-example-end-to-end-derivation-flow-5g)
+    - [10. Implementation Notes](#10-implementation-notes)
+    - [11. Security Level Summary](#11-security-level-summary)
+    - [12. Final Formula Summary](#12-final-formula-summary)
 
 ---
 
