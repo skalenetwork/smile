@@ -54,8 +54,28 @@ public:
     /**
      * @brief Derives a 256-bit seed from 3G AKA outputs (RES, CK, IK).
      *
-     * Runs 3G AKA via authenticate3G and hashes a domain-separated concatenation
-     * of the outputs (RES || CK || IK) with SHA-256 to produce a 256-bit seed.
+     * How it works:
+     * 1) Invokes authenticate3G(rand, autn, k, opc, amf). On success this verifies AUTN
+     *    (MAC-A check) and returns the tuple (RES[8], CK[16], IK[16], AK[6]).
+     * 2) Builds a domain-separated message M = prefix || RES || CK || IK where:
+     *      - prefix = ASCII string "SMILE|3G|seed|v1" used to prevent cross-protocol
+     *        or cross-version collisions (i.e., the same values used elsewhere will not
+     *        accidentally hash to the same seed).
+     *      - AK is intentionally excluded because it masks SQN and is not used as keying material.
+     * 3) Computes seed = SHA-256(M) and returns the 32-byte digest as Block256.
+     *
+     * Properties and notes:
+     * - Deterministic: identical inputs yield the same seed; any input change flips the seed.
+     * - authenticate3G throws if AUTN verification fails; this function propagates that error.
+     * - No state is stored; inputs are not modified.
+     *
+     * @param rand 16-byte random challenge RAND from the network.
+     * @param autn 16-byte AUTN token containing SQN⊕AK || AMF || MAC-A.
+     * @param k 16-byte subscriber key K.
+     * @param opc 16-byte operator variant constant OPc.
+     * @param amf 2-byte AMF used by Milenage f1/f1*.
+     * @return 32-byte seed (SHA-256 digest) as Block256.
+     * @throws std::runtime_error if AKA verification or hashing fails.
      */
     static Block256 deriveSeed3G(const Block128& rand, const Block128& autn,
                                  const Block128& k, const Block128& opc,
