@@ -53,15 +53,20 @@ Your phone number is now your wallet identity.
 
 <summary><strong>Table of Contents</strong></summary>
 
+- [What SMILE Does](#what-smile-does)
+- [Why It Matters](#why-it-matters)
 - [Building Reference Implementation](#building-reference-implementation)
-- [Using `SmileSeedDerivation` Class](#smileseedderivation-class)
+- [Using `SmileSeedDerivation` Class](#using-smileseedderivation-class)
     - [Overview](#overview)
     - [Public Interface Summary](#public-interface-summary)
     - [`deriveBIP32MasterSeed2G`](#derivebip32masterseed2g)
     - [`deriveBIP32MasterSeed3G`](#derivebip32masterseed3g)
     - [`deriveBIP32MasterSeed4G`](#derivebip32masterseed4g)
     - [`deriveBIP32MasterSeed5G`](#derivebip32masterseed5g)
-- [References](#references)
+    - [References](#references)
+- [Using `Bip32Wallet` Class](#using-bip32wallet-class)
+    - [`deriveWalletPrivateKey`](#derivewalletprivatekey)
+    - [`computePublicKeyFromPrivate`](#computepublickeyfromprivate)
 - [Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)](#spec-bip32-master-seed-derivation-using-cellular-authentication-2g5g)
     - [1. Overview](#1-overview)
     - [2. Notation](#2-notation)
@@ -253,7 +258,7 @@ Computes a  **256-bit BIP-32 master seed**  from 5G-AKA authentication results (
 
 
 
-## 🔗 References
+### References
 
 | Standard | Document | Description |
 |-----------|-----------|--------------|
