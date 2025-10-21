@@ -228,16 +228,7 @@ Computes a  **256-bit BIP-32 master seed**  from 5G-AKA authentication results (
 
 ---
 
-## 📘 Summary Table
 
-| Generation | Function | Key Material Used | KDF Type | Output |
-|-------------|-----------|------------------|-----------|---------|
-| **2G** | `deriveBIP32MasterSeed2G` | SRES ‖ Kc | SHA-256 | 256 bits |
-| **3G** | `deriveBIP32MasterSeed3G` | RES ‖ CK ‖ IK | SHA-256 | 256 bits |
-| **4G** | `deriveBIP32MasterSeed4G` | RES ‖ K_ASME | SHA-256 | 256 bits |
-| **5G** | `deriveBIP32MasterSeed5G` | K_SEAF | HKDF-SHA-256 | 256 bits |
-
----
 
 ## 🔗 References
 
