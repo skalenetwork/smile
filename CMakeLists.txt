@@ -20,9 +20,9 @@ find_package(nlohmann_json REQUIRED)
 
 add_executable(smile-demo
         src/main.cpp
-        src/smile_sim.cpp
+        src/sim.cpp
         src/smile_kdf.cpp
-        src/smile_wallet.cpp
+        src/wallet.cpp
 )
 
 target_include_directories(smile-demo PRIVATE src external/libbtc/include)

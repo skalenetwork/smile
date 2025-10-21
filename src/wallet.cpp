@@ -1,4 +1,4 @@
-#include "smile_wallet.h"
+#include "wallet.h"
 #include <iostream>
 #include <iomanip>
 #include <openssl/hmac.h>

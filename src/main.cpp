@@ -1,6 +1,6 @@
-#include "smile_sim.h"
+#include "sim.h"
 #include "smile_kdf.h"
-#include "smile_wallet.h"
+#include "wallet.h"
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <iomanip>
