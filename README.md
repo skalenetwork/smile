@@ -265,6 +265,95 @@ Computes a  **256-bit BIP-32 master seed**  from 5G-AKA authentication results (
 
 ---
 
+
+# Using `Bip32Wallet` Class
+
+**Header:** `#include "Bip32Wallet.h"`
+
+## Overview
+
+`Bip32Wallet` provides a lightweight, standards-compliant implementation of the **BIP32 hierarchical deterministic (HD) wallet key derivation** process.
+
+It exposes stateless cryptographic helpers for deriving:
+- **child private keys** (both hardened and non-hardened) from any seed, and
+- the corresponding **compressed public key** on the secp256k1 elliptic curve.
+
+---
+
+## Public Interface Summary
+
+| Function | Input | Output | Description |
+|-----------|--------|---------|-------------|
+| [`deriveWalletPrivateKey`](#derivewalletprivatekey) | seed (32 B), index (uint32) | child private key (32 B) | Derives a child private key from a BIP32 seed |
+| [`computePublicKeyFromPrivate`](#computepublickeyfromprivate) | private key (32 B) | compressed pubkey (33 B) | Computes compressed secp256k1 public key |
+
+---
+
+## `deriveWalletPrivateKey`
+
+```cpp
+static array32 deriveWalletPrivateKey(const array32& seed, uint32_t index = 0);
+```
+
+### Description
+
+Derives a **child private key** from a given 32-byte BIP32 seed, following the standard BIP32 key derivation procedure.  
+
+#
+### Parameters
+
+| Name | Type | Description |
+|------|------|--------------|
+| `seed` | `array32` | 256-bit BIP32 master seed |
+| `index` | `uint32_t` | Child index; bit 31 (0x80000000) selects hardened derivation. Default = `0` |
+
+### Returns
+
+- 32-byte derived child private key (`array32`). Throews exception on failure.
+
+---
+
+## `computePublicKeyFromPrivate`
+
+```cpp
+static std::array<uint8_t, 33> computePublicKeyFromPrivate(const array32 &privkey);
+```
+
+### Description
+
+Computes a **compressed public key** (33 bytes) from a given private key.
+
+### Parameters
+
+| Name | Type | Description |
+|------|------|--------------|
+| `privkey` | `array32` | 32-byte secp256k1 private key |
+
+### Returns
+
+- 33-byte compressed public key. Throws exception on failure.
+
+---
+
+## Cryptographic Notes
+
+- Curve parameters follow **secp256k1** (Bitcoin, Ethereum, SKALE, etc.).
+
+---
+
+## Standards & References
+
+| Specification | Section | Description |
+|----------------|----------|--------------|
+| [BIP32](https://github.com/bitcoin/bips/blob/master/bip-0032.mediawiki) | §4–§5 | Hierarchical Deterministic Wallets |
+| [SECP256K1](https://www.secg.org/sec2-v2.pdf) | §2.7 | Elliptic Curve Parameters |
+| [RFC 2104](https://www.rfc-editor.org/rfc/rfc2104) | — | HMAC Construction |
+| [OpenSSL EVP / EC API](https://www.openssl.org/docs/man3.0/man7/evp.html) | — | Cryptographic primitives |
+
+
+
+
+
 # Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)
 
 **Standards:**
