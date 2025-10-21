@@ -48,6 +48,7 @@ Your phone number is now your wallet identity.
 - **Carrier ↔ crypto flywheel**: airtime, rewards, promos → on-chain assets
 - **Signed operations**: firmware updates, door unlocks, telemetry notarization
 
+---
 
 
 <summary><strong>Table of Contents</strong></summary>
