@@ -167,13 +167,13 @@ from the authentication results (RES, CK, IK).
 
 
 ### Parameters
-| Name | Size | Description |
-|------|------|-------------|
-| `rand` | 16 B | Network challenge RAND |
-| `autn` | 16 B | AUTN = (SQN ⊕ AK) ‖ AMF ‖ MAC-A |
-| `k` | 16 B | Subscriber long-term key K |
-| `opc` | 16 B | Operator variant constant OPc = OP ⊕ AES_K(OP) |
-| `amf` | 2 B | Authentication Management Field (typically 0x8000) |
+| Name | Size | Description                                                             |
+|------|------|-------------------------------------------------------------------------|
+| `rand` | 16 B | Network challenge RAND                                                  |
+| `autn` | 16 B | AUTN = (SQN ⊕ AK) ‖ AMF ‖ MAC-A                                         |
+| `k` | 16 B | Subscriber long-term key K                                              |
+| `opc` | 16 B | Operator variant constant OPc = OP ⊕ AES_K(OP). Fixed per operator.     |
+| `amf` | 2 B | Authentication Management Field (typically 0x8000). Fixed per operator. |
 
 ### Returns
 - 32-byte seed. Throws exception on failure.
@@ -200,14 +200,14 @@ static array32 deriveBIP32MasterSeed4G(
 Derives a  **32-byte BIP-32 master seed** from LTE/EPS-AKA authentication results (RES, K_ASME).
 
 ### Parameters
-| Name | Description |
-|------|--------------|
-| `rand` | 16-byte network challenge RAND |
-| `autn` | 16-byte authentication token AUTN |
-| `k` | Subscriber key K |
-| `opc` | Operator constant OPc |
-| `amf` | 2-byte Authentication Management Field |
-| `snn` | **Serving Network Name** (e.g., `"mnc410.mcc310.3gppnetwork.org"`) |
+| Name | Description                                                                             |
+|------|-----------------------------------------------------------------------------------------|
+| `rand` | 16-byte network challenge RAND                                                          |
+| `autn` | 16-byte authentication token AUTN                                                       |
+| `k` | Subscriber key K                                                                        |
+| `opc` | Operator constant OPc. Fixed per operator.                                              |
+| `amf` | 2-byte Authentication Management Field. Fixed per operator.                             |
+| `snn` | **Serving Network Name** (e.g., `"mnc410.mcc310.3gppnetwork.org"`). Fixed per operator. |
 
 ### Returns
 - 32-byte seed. Throws exception on failure.
@@ -234,14 +234,14 @@ static array32 deriveBIP32MasterSeed5G(
 Computes a  **32-byte BIP-32 master seed**  from 5G-AKA authentication results (`RES*`, `K_SEAF`).
 
 ### Parameters
-| Name | Description |
-|------|--------------|
-| `rand` | 16-byte RAND |
-| `autn` | 16-byte AUTN |
-| `k` | 16-byte subscriber key |
-| `opc` | 16-byte operator variant constant |
-| `amf` | 2-byte AMF |
-| `snn` | Serving Network Name (as per 3GPP TS 33.501) |
+| Name | Description                                                      |
+|------|------------------------------------------------------------------|
+| `rand` | 16-byte RAND                                                     |
+| `autn` | 16-byte AUTN                                                     |
+| `k` | 16-byte subscriber key                                           |
+| `opc` | 16-byte operator variant constant. Fixed per operator            |
+| `amf` | 2-byte AMF. Fixed per operator.                                  |
+| `snn` | Serving Network Name (as per 3GPP TS 33.501). Fixed per operator |
 
 ### Returns
 - 32-byte seed. Throws exception on failure.
