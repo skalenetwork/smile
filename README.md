@@ -90,6 +90,8 @@ cmake .. && make
 ./smile
 ```
 
+---
+
 # Using `SmileSeedDerivation` Class
 
 **Usage:** `#include SmileSeedDerivation.h`
