@@ -406,6 +406,11 @@ The final seed derivation uses the standardized **HKDF** function (RFC 5869) ove
 
 ### 3.1. HKDF (RFC 5869)
 
+RFC 5869 defines the HMAC-based Key Derivation Function (HKDF), 
+a simple and secure method for deriving strong cryptographic keys from initial keying material using HMAC. 
+It standardizes a two-step process—extract and expand—to ensure key separation, uniformity, and resistance 
+to entropy loss or bias in the input material.
+
 Let:
 - `IKM` be the input keying material (entropy source)
 - `salt` be an optional context string (domain separation)
