@@ -1,4 +1,5 @@
 #include "Wallet.h"
+#include "common.h"
 #include <iostream>
 #include <iomanip>
 #include <openssl/hmac.h>
@@ -6,28 +7,54 @@
 #include <vector>
 #include <string>
 #include <cstring> // For strlen
+#include <algorithm> // For std::all_of
 
-// Helper: print bytes as hex
-static void print_hex(const std::string& label, const std::vector<uint8_t>& data) {
-    std::cout << "  " << label << ": ";
-    for (auto b : data) std::cout << std::hex << std::setw(2) << std::setfill('0') << (int)b;
-    std::cout << std::dec << std::endl;
+
+
+// The order of the secp256k1 curve
+static const Block256 SECP256K1_ORDER = {
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFE,
+    0xBA, 0xAE, 0xDC, 0xE6, 0xAF, 0x48, 0xA0, 0x3B,
+    0xBF, 0xD2, 0x5E, 0x8C, 0xD0, 0x36, 0x41, 0x41
+};
+
+bool Wallet::isValidKey(const Block256& privkey) {
+    if (std::all_of(privkey.begin(), privkey.end(), [](uint8_t b){ return b == 0; }))
+        return false;
+
+    for (size_t i = 0; i < 32; ++i) {
+        if (privkey[i] < SECP256K1_ORDER[i]) return true;
+        if (privkey[i] > SECP256K1_ORDER[i]) return false;
+    }
+    return false; // equal to n is invalid
 }
 
-// Implements BIP-32 master key derivation (returns privkey + chaincode)
-static std::pair<std::vector<uint8_t>, std::vector<uint8_t>> bip32_master_key(const std::vector<uint8_t>& seed) {
-    const char* key = "Bitcoin seed";
+std::pair<Block256, Block256> Wallet::deriveMaster(const Block256& seed) {
+    static constexpr char key[] = "Bitcoin seed";
     unsigned int outlen = 64;
-    std::vector<uint8_t> out(64);
-    HMAC(EVP_sha512(), key, strlen(key), seed.data(), seed.size(), out.data(), &outlen);
-    std::vector<uint8_t> privkey(out.begin(), out.begin() + 32);
-    std::vector<uint8_t> chaincode(out.begin() + 32, out.end());
+    std::array<uint8_t, 64> out{};
+
+    unsigned char* result = HMAC(
+        EVP_sha512(),
+        key, sizeof(key) - 1,
+        seed.data(), seed.size(),
+        out.data(), &outlen
+    );
+
+    if (!result || outlen != 64) {
+        throw std::runtime_error("HMAC-SHA512 failed");
+    }
+
+    Block256 privkey, chaincode;
+    std::memcpy(privkey.data(), out.data(), 32);
+    std::memcpy(chaincode.data(), out.data() + 32, 32);
+
+    if (!isValidKey(privkey)) {
+        throw std::runtime_error("Invalid master private key (IL out of range)");
+    }
+
     return {privkey, chaincode};
 }
 
-void Wallet::derive_master(const std::vector<uint8_t>& seed) {
-    auto [privkey, chaincode] = bip32_master_key(seed);
-    std::cout << "[SMILE] Derived master key (BIP-32):\n";
-    print_hex("privkey", privkey);
-    print_hex("chaincode", chaincode);
-}
+

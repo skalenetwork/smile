@@ -24,14 +24,17 @@ int main() {
 
     std::vector<uint8_t> salt = {0x00};
     auto prk = hkdf_extract(salt, Z);
-    auto seed = hkdf_expand(prk, "SMILE|AKA->BIP|seed|v1", 64);
+    auto seed_vec = hkdf_expand(prk, "SMILE|AKA->BIP|seed|v1", 32);
 
-    Wallet::derive_master(seed);
+    Block256 seed;
+    std::copy(seed_vec.begin(), seed_vec.end(), seed.begin());
+
+    Wallet::deriveMaster(seed);
     sim.disconnect();
 
     nlohmann::json j;
     j["status"] = "ok";
-    j["seed_hex"] = nlohmann::json::binary(seed);
+    j["seed_hex"] = nlohmann::json::binary(seed_vec);
     std::cout << j.dump(2) << "\n";
 
     return 0;

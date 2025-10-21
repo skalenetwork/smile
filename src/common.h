@@ -17,4 +17,4 @@
 
 using Block128 = std::array<uint8_t, 16>;
 using Block256 = std::array<uint8_t, 32>;
-using Block512 = std::array<uint8_t, 64>;
+
