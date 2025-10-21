@@ -8,8 +8,7 @@
 #include "Aka2G.h"
 
 
-using array16 = std::array<uint8_t, 16>;
-using array256 = std::array<uint8_t, 32>;
+
 
 
 array256 SmileSeedDerivation::rfc5869Hkdf(const std::vector<uint8_t>& ikm,

@@ -20,7 +20,7 @@
 
 
 
-
+using array2 = std::array<uint8_t, 2>;
 using array4 = std::array<uint8_t, 4>;
 using array8 = std::array<uint8_t, 8>;
 using array16 = std::array<uint8_t, 16>;

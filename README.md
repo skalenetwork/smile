@@ -58,6 +58,199 @@ cmake .. && make
 ./smile
 ```
 
+# `SmileSeedDerivation` Class
+
+**Header:** `SmileSeedDerivation.h`
+
+## Overview
+
+`SmileSeedDerivation` provides a unified cryptographic abstraction for deriving **256-bit deterministic master seeds** (e.g., for BIP-32 hierarchical key systems) directly from cellular authentication primitives across multiple generations — **2G (GSM)**, **3G (UMTS-AKA)**, **4G (EPS-AKA)**, and **5G (5G-AKA)**.
+
+Each generation uses the same conceptual structure:
+
+| Generation | Underlying Standard | Key Algorithm | Output |
+|-------------|---------------------|----------------|---------|
+| 2G | GSM / TS 51.011 | COMP128-1 (A3/A8) → SHA-256 | 32-byte seed |
+| 3G | TS 33.102 / TS 35.206 | Milenage → SHA-256 | 32-byte seed |
+| 4G | TS 33.401 | EPS-AKA KDF → SHA-256 | 32-byte seed |
+| 5G | TS 33.501 | 5G-AKA KDF → HKDF-SHA-256 | 32-byte seed |
+
+All derivations are **deterministic**, **stateless**, and **domain-separated** using versioned ASCII labels (e.g., `"SMILE|4G|seed|v1"`).
+
+---
+
+## Public Interface Summary
+
+| Function | Input | Core Algorithm | Output |
+|-----------|--------|----------------|---------|
+| `deriveBIP32MasterSeed2G` | RAND, Ki | COMP128-1 → SHA-256(SRES ‖ Kc) | 256-bit seed |
+| `deriveBIP32MasterSeed3G` | RAND, AUTN, K, OPc, AMF | Milenage → SHA-256(RES ‖ CK ‖ IK) | 256-bit seed |
+| `deriveBIP32MasterSeed4G` | RAND, AUTN, K, OPc, AMF, SNN | EPS-AKA KDF → SHA-256(RES ‖ K_ASME) | 256-bit seed |
+| `deriveBIP32MasterSeed5G` | RAND, AUTN, K, OPc, AMF, SNN | 5G-AKA KDF → HKDF-SHA-256(K_SEAF) | 256-bit seed |
+
+---
+
+## `deriveBIP32MasterSeed2G`
+
+```cpp
+static array256 deriveBIP32MasterSeed2G(const array16 &rand, const array16 &ki);
+```
+
+### Description
+Derives a **256-bit BIP-32 master seed** from GSM (2G) authentication results.
+
+### Parameters
+| Name | Size | Description |
+|------|------|-------------|
+| `rand` | 16 bytes | Network random challenge (RAND) |
+| `ki` | 16 bytes | Subscriber secret key stored on the SIM card (Ki) |
+
+### Returns
+| Type | Size | Description |
+|-------|------|-------------|
+| `array256` | 32 bytes | Derived seed value suitable as BIP-32 master seed |
+
+### Notes
+- Deterministic for fixed `(RAND, Ki)`.
+- COMP128-1 used internally as demonstration; real SIMs may use proprietary A3/A8 variants.
+
+---
+
+## `deriveBIP32MasterSeed3G`
+
+```cpp
+static array256 deriveBIP32MasterSeed3G(
+    const array16 &rand,
+    const array16 &autn,
+    const array16 &k,
+    const array16 &opc,
+    const array2 &amf);
+```
+
+### Description
+Implements **3G/UMTS-AKA** (Authentication and Key Agreement), and derives a  **256-bit BIP-32 master seed** 
+from the authentication results (RES, CK, IK).
+
+
+### Parameters
+| Name | Size | Description |
+|------|------|-------------|
+| `rand` | 16 B | Network challenge RAND |
+| `autn` | 16 B | AUTN = (SQN ⊕ AK) ‖ AMF ‖ MAC-A |
+| `k` | 16 B | Subscriber long-term key K |
+| `opc` | 16 B | Operator variant constant OPc = OP ⊕ AES_K(OP) |
+| `amf` | 2 B | Authentication Management Field (typically 0x8000) |
+
+### Returns
+- 32-byte SHA-256 digest as `array256`.
+
+### Behavior
+- Throws `std::runtime_error` if MAC-A verification fails.
+- Stateless; excludes AK (anonymity key) from seed input.
+
+### Standards
+- 3GPP TS 33.102 § 6.3
+- 3GPP TS 35.205 – 35.207 (Milenage)
+
+---
+
+## `deriveBIP32MasterSeed4G`
+
+```cpp
+static array256 deriveBIP32MasterSeed4G(
+    const array16 &rand,
+    const array16 &autn,
+    const array16 &k,
+    const array16 &opc,
+    const array2 &amf,
+    const std::string &snn);
+```
+
+### Description
+Derives a  **256-bit BIP-32 master seed** from LTE/EPS-AKA authentication results (RES, K_ASME).
+
+### Parameters
+| Name | Description |
+|------|--------------|
+| `rand` | 16-byte network challenge RAND |
+| `autn` | 16-byte authentication token AUTN |
+| `k` | Subscriber key K |
+| `opc` | Operator constant OPc |
+| `amf` | 2-byte Authentication Management Field |
+| `snn` | **Serving Network Name** (e.g., `"mnc410.mcc310.3gppnetwork.org"`) |
+
+### Returns
+- 32-byte SHA-256 digest as `array256`.
+
+### Notes
+- `SNN` introduces domain separation between PLMNs.
+- Used for LTE / EPC key hierarchies where K_ASME anchors all further keys.
+
+### Standards
+- 3GPP TS 33.401 Annex A.2–A.4
+- 3GPP TS 23.003 § 28.7 (SNN format)
+
+---
+
+## `deriveBIP32MasterSeed5G`
+
+```cpp
+static array256 deriveBIP32MasterSeed5G(
+    const array16 &rand,
+    const array16 &autn,
+    const array16 &k,
+    const array16 &opc,
+    const array2 &amf,
+    const std::string &snn);
+```
+
+### Description
+Computes a  **256-bit BIP-32 master seed**  from 5G-AKA authentication results (`RES*`, `K_SEAF`).
+
+### Parameters
+| Name | Description |
+|------|--------------|
+| `rand` | 16-byte RAND |
+| `autn` | 16-byte AUTN |
+| `k` | 16-byte subscriber key |
+| `opc` | 16-byte operator variant constant |
+| `amf` | 2-byte AMF |
+| `snn` | Serving Network Name (as per 3GPP TS 33.501) |
+
+### Returns
+- 32-byte seed derived via HKDF-SHA256 (RFC 5869).
+
+
+### Standards
+- 3GPP TS 33.501 Annex A.4–A.6
+- RFC 5869 (HKDF)
+- 3GPP TS 24.501 (SNN naming)
+
+---
+
+## 📘 Summary Table
+
+| Generation | Function | Key Material Used | KDF Type | Output |
+|-------------|-----------|------------------|-----------|---------|
+| **2G** | `deriveBIP32MasterSeed2G` | SRES ‖ Kc | SHA-256 | 256 bits |
+| **3G** | `deriveBIP32MasterSeed3G` | RES ‖ CK ‖ IK | SHA-256 | 256 bits |
+| **4G** | `deriveBIP32MasterSeed4G` | RES ‖ K_ASME | SHA-256 | 256 bits |
+| **5G** | `deriveBIP32MasterSeed5G` | K_SEAF | HKDF-SHA-256 | 256 bits |
+
+---
+
+## 🔗 References
+
+| Standard | Document | Description |
+|-----------|-----------|--------------|
+| GSM / 2G | 3GPP TS 51.011 | SIM–ME interface, A3/A8 |
+| 3G | 3GPP TS 33.102 / 35.205-207 | UMTS AKA / Milenage |
+| 4G | 3GPP TS 33.401 | EPS AKA KDF for K_ASME |
+| 5G | 3GPP TS 33.501 | 5G-AKA KDF for K_SEAF, RES* |
+| KDF | RFC 5869 | HMAC-based Key Derivation Function |
+
+---
+
 # Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)
 
 **Standards:**

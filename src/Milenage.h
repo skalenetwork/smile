@@ -7,11 +7,7 @@
 #include <array>
 
 
-// All parameters are 16 bytes (128 bits) unless noted otherwise
-using array16 = std::array<uint8_t, 16>;
 
-// A 256-bit (32-byte) block, used for K_ASME, etc.
-using array256 = std::array<uint8_t, 32>;
 
 // Operator‐specific constant OP (16 bytes) and derived OPc.
 void deriveOpc(const array16 &K, const array16 &OP, array16 &OPc);

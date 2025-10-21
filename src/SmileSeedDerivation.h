@@ -16,7 +16,7 @@ class SmileSeedDerivation {
      * @param ki A 16-byte (128-bit) secret key stored on the SIM card.
      * @return A 256-bit (32-byte) seed as a std::array.
      */
-    static array256 deriveBIP32MasterSeed2G(const array16& rand, const array16& ki);
+    static array256 deriveBIP32MasterSeed2G(const array16 &rand, const array16 &ki);
 
     /**
  * @brief Derives a 256-bit seed from 3G AKA outputs (RES, CK, IK).
@@ -39,14 +39,14 @@ class SmileSeedDerivation {
  * @param rand 16-byte random challenge RAND from the network.
  * @param autn 16-byte AUTN token containing SQN⊕AK || AMF || MAC-A.
  * @param k 16-byte subscriber key K.
- * @param opc 16-byte operator variant constant OPc.
- * @param amf 2-byte AMF used by Milenage f1/f1*.
+ * @param opc 16-byte operator variant constant OPc. Fixed per operator.
+ * @param amf 2-byte AMF used by Milenage f1/f1*. Fixed per operator.
  * @return 32-byte seed (SHA-256 digest) as Block256.
  * @throws std::runtime_error if AKA verification or hashing fails.
  */
-    static array256 deriveBIP32MasterSeed3G(const array16& rand, const array16& autn,
-                                 const array16& k, const array16& opc,
-                                 const std::array<uint8_t,2>& amf);
+    static array256 deriveBIP32MasterSeed3G(const array16 &rand, const array16 &autn,
+                                            const array16 &k, const array16 &opc,
+                                            const array2 &amf);
 
     /**
      * @brief Derives a 256-bit seed from 4G EPS-AKA outputs (RES, K_ASME).
@@ -59,15 +59,15 @@ class SmileSeedDerivation {
      * @param rand 16-byte RAND from the network.
      * @param autn 16-byte AUTN token.
      * @param k 16-byte subscriber key K.
-     * @param opc 16-byte operator variant constant OPc.
-     * @param amf 2-byte AMF.
-     * @param snn Serving Network Name (string) for 4G KDF.
+     * @param opc 16-byte operator variant constant OPc. Fixed per operator.
+     * @param amf 2-byte AMF. Fixed per operator.
+     * @param snn Serving Network Name (string) for 4G KDF. Fixed per operator.
      * @return 32-byte seed (SHA-256 digest) as Block256.
      */
-    static array256 deriveBIP32MasterSeed4G(const array16& rand, const array16& autn,
-                                 const array16& k, const array16& opc,
-                                 const std::array<uint8_t,2>& amf,
-                                 const std::string& snn);
+    static array256 deriveBIP32MasterSeed4G(const array16 &rand, const array16 &autn,
+                                            const array16 &k, const array16 &opc,
+                                            const array2 &amf,
+                                            const std::string &snn);
 
     /**
  * @brief Derives a 256-bit seed from 5G AKA outputs (RES*, K_SEAF).
@@ -82,18 +82,17 @@ class SmileSeedDerivation {
  * @param rand 16-byte RAND from the network.
  * @param autn 16-byte AUTN token.
  * @param k 16-byte subscriber key K.
- * @param opc 16-byte operator variant constant OPc.
- * @param amf 2-byte AMF.
- * @param snn Serving Network Name.
+ * @param opc 16-byte operator variant constant OPc. Fixed per operator.
+ * @param amf 2-byte AMF. Fixed per operator.
+ * @param snn Serving Network Name. Fixed per operator.
  * @return 32-byte seed (HKDF-SHA256) as Block256.
  */
-    static array256 deriveBIP32MasterSeed5G(const array16& rand, const array16& autn,
-                                 const array16& k, const array16& opc,
-                                 const std::array<uint8_t,2>& amf,
-                                 const std::string& snn);
+    static array256 deriveBIP32MasterSeed5G(const array16 &rand, const array16 &autn,
+                                            const array16 &k, const array16 &opc,
+                                            const array2 &amf,
+                                            const std::string &snn);
 
-
-public:
+private:
     /**
      * @brief Performs 2G (GSM) authentication (A3/A8) using a COMP128-1 implementation.
      *
@@ -114,8 +113,8 @@ public:
      * @param ki A 16-byte (128-bit) secret key stored on the SIM card (Ki).
      * @return A pair containing the 4-byte SRES and the 8-byte Kc.
      */
-    static std::pair<std::array<uint8_t,4>, std::array<uint8_t,8>>
-    authenticate2G(const array16& rand, const array16& ki);
+    static std::pair<std::array<uint8_t, 4>, std::array<uint8_t, 8> >
+    authenticate2G(const array16 &rand, const array16 &ki);
 
 
     /**
@@ -158,10 +157,9 @@ public:
      * @return Tuple {RES, CK, IK, AK} with sizes {8, 16, 16, 6} bytes respectively.
      * @see 3GPP TS 33.102; 3GPP TS 35.205/35.206/35.207.
      */
-    static std::tuple<std::array<uint8_t,8>, std::array<uint8_t,16>, std::array<uint8_t,16>, std::array<uint8_t,6>>
-    authenticate3G(const array16& rand, const array16& autn,
-                   const array16& k, const array16& opc, const std::array<uint8_t,2>& amf);
-
+    static std::tuple<std::array<uint8_t, 8>, std::array<uint8_t, 16>, std::array<uint8_t, 16>, std::array<uint8_t, 6> >
+    authenticate3G(const array16 &rand, const array16 &autn,
+                   const array16 &k, const array16 &opc, const std::array<uint8_t, 2> &amf);
 
 
     /**
@@ -190,11 +188,10 @@ public:
      * @param snn The Serving Network Name (SNN/SN id) used by the EPS KDF per TS 33.401.
      * @return A pair containing the 8-byte RES and the 32-byte K_ASME.
      */
-    static std::pair<std::array<uint8_t,8>, array256>
-    authenticate4G(const array16& rand, const array16& autn,
-                   const array16& k, const array16& opc, const std::array<uint8_t,2>& amf,
-                   const std::string& snn);
-
+    static std::pair<std::array<uint8_t, 8>, array256>
+    authenticate4G(const array16 &rand, const array16 &autn,
+                   const array16 &k, const array16 &opc, const std::array<uint8_t, 2> &amf,
+                   const std::string &snn);
 
 
     /**
@@ -234,10 +231,10 @@ public:
      * @param snn Serving Network Name used as KDF context (per 3GPP TS 33.501 Annex A).
      * @return Pair of {RES* (16 bytes), K_SEAF (32 bytes)}.
      */
-    static std::pair<std::array<uint8_t,16>, array256>
-    authenticate5G(const array16& rand, const array16& autn,
-                   const array16& k, const array16& opc, const std::array<uint8_t,2>& amf,
-                   const std::string& snn);
+    static std::pair<std::array<uint8_t, 16>, array256>
+    authenticate5G(const array16 &rand, const array16 &autn,
+                   const array16 &k, const array16 &opc, const std::array<uint8_t, 2> &amf,
+                   const std::string &snn);
 
 
     /**
@@ -288,8 +285,7 @@ public:
      * - The output length here is fixed to 32 bytes (HashLen). If you need a different length,
      *   you would adjust L accordingly during the Expand phase.
      */
-    array256 static rfc5869Hkdf(const std::vector<uint8_t>& ikm,
-                            std::string_view salt,
-                            std::string_view info);
-
+    array256 static rfc5869Hkdf(const std::vector<uint8_t> &ikm,
+                                std::string_view salt,
+                                std::string_view info);
 };
