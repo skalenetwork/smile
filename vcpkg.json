@@ -1,0 +1,8 @@
+{
+  "name": "smile-demo",
+  "version": "1.0.0",
+  "dependencies": [
+    "openssl",
+    "nlohmann-json"
+  ]
+}
