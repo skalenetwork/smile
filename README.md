@@ -60,7 +60,7 @@ cmake .. && make
 
 # `SmileSeedDerivation` Class
 
-**Header:** `SmileSeedDerivation.h`
+**Usage:** `#include SmileSeedDerivation.h`
 
 ## Overview
 
