@@ -25,20 +25,21 @@ and hardware-grade wallet security.
 Your phone number is now your wallet identity.
 
 
+<details>
 <summary><strong>Table of Contents</strong></summary>
 
-- [What SMILE Does](#-what-smile-does)
-- [Why It Matters](#-why-it-matters)
-- [Building Reference Implementation](#-reference-implementation)
-- [`SmileSeedDerivation` Class](#-smileseedderivation-class)
+- [What SMILE Does](#what-smile-does)
+- [Why It Matters](#why-it-matters)
+- [Reference Implementation](#building-reference-implementation)
+- [`SmileSeedDerivation` Class](#smileseedderivation-class)
   - [Overview](#overview)
   - [Public Interface Summary](#public-interface-summary)
   - [`deriveBIP32MasterSeed2G`](#derivebip32masterseed2g)
   - [`deriveBIP32MasterSeed3G`](#derivebip32masterseed3g)
   - [`deriveBIP32MasterSeed4G`](#derivebip32masterseed4g)
   - [`deriveBIP32MasterSeed5G`](#derivebip32masterseed5g)
-- [References](#-references)
-- [Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)](#-spec-bip32-master-seed-derivation-using-cellular-authentication-2g5g)
+- [References](#references)
+- [Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)](#spec-bip32-master-seed-derivation-using-cellular-authentication-2g5g)
   - [1. Overview](#1-overview)
   - [2. Notation](#2-notation)
   - [3. Cryptographic Framework](#3-cryptographic-framework)
@@ -52,6 +53,8 @@ Your phone number is now your wallet identity.
   - [10. Implementation Notes](#10-implementation-notes)
   - [11. Security Level Summary](#11-security-level-summary)
   - [12. Final Formula Summary](#12-final-formula-summary)
+
+</details>
 
 
 ---
@@ -88,7 +91,7 @@ cmake .. && make
 ./smile
 ```
 
-# `SmileSeedDerivation` Class
+# Using `SmileSeedDerivation` Class
 
 **Usage:** `#include SmileSeedDerivation.h`
 
