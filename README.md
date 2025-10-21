@@ -24,6 +24,37 @@ and hardware-grade wallet security.
 
 Your phone number is now your wallet identity.
 
+<details>
+<summary><strong>Table of Contents</strong></summary>
+
+- What SMILE Does
+- Why It Matters
+- Reference Implementation
+- SmileSeedDerivation Class
+  - Overview
+  - Public Interface Summary
+  - deriveBIP32MasterSeed2G
+  - deriveBIP32MasterSeed3G
+  - deriveBIP32MasterSeed4G
+  - deriveBIP32MasterSeed5G
+- References
+- Spec: BIP32 Master Seed Derivation using Cellular Authentication (2G–5G)
+  - 1. Overview
+  - 2. Notation
+  - 3. Cryptographic Framework
+    - 3.1. HKDF (RFC 5869)
+  - 4. 2G: deriveBIP32MasterSeed2G
+  - 5. 3G: deriveBIP32MasterSeed3G
+  - 6. 4G: deriveBIP32MasterSeed4G
+  - 7. 5G: deriveBIP32MasterSeed5G
+  - 8. Security Discussion
+  - 9. Example End-to-End Derivation Flow (5G)
+  - 10. Implementation Notes
+  - 11. Security Level Summary
+  - 12. Final Formula Summary
+
+</details>
+
 ---
 
 ## 🚀 What SMILE Does
