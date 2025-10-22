@@ -83,14 +83,18 @@ Your phone number is now your wallet identity.
 
 ## 🛠 Building Reference Implementation
 
+
+
 Build and run the SMILE reference implementation:
 
 ```bash
-git clone https://github.com/skalenetwork/smile
+git clone https://github.com/skalenetwork/smile --recursive
 cd smile && mkdir build && cd build
 cmake .. && make
 ./smile
 ```
+
+Currently build and tested on Ubuntu 22 or later. Windows and Mac builds coming.
 
 ---
 
