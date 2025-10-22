@@ -53,7 +53,7 @@ Your phone number is now your wallet identity.
 
 - [What SMILE Does](#what-smile-does)
 - [Why It Matters](#why-it-matters)
-- [Building Reference Implementation](#building-reference-implementation)
+- [Build and Run SMILE](#building-reference-implementation)
 - [Using `SmileSeedDerivation` Class](#using-smileseedderivation-class)
     - [Overview](#overview)
     - [Public Interface Summary](#public-interface-summary)
@@ -81,8 +81,41 @@ Your phone number is now your wallet identity.
 
 ---
 
-## 🛠 Building Reference Implementation
+## 🚀 Build and Run SMILE
 
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/skalenetwork/smile --recursive
+```
+
+### 2. Bootstrap and install dependencies using vcpkg
+
+```bash
+./external/vcpkg/bootstrap-vcpkg.sh
+./external/vcpkg/vcpkg install
+```
+
+### 3. Configure and build with CMake
+
+```bash
+cmake -S . -B build   -DCMAKE_BUILD_TYPE=Release   -DCMAKE_TOOLCHAIN_FILE=external/vcpkg/scripts/buildsystems/vcpkg.cmake   -DVCPKG_FEATURE_FLAGS=manifests   -DVCPKG_TARGET_TRIPLET=x64-linux
+
+cmake --build build -j
+```
+
+### 4. Run the SMILE demo
+
+```bash
+build/smile
+```
+
+---
+
+## 🧠 Notes
+
+- ✅ **Tested on:** Ubuntu 22.04 and later  
+- 🧩 **Coming soon:** Windows and macOS builds  
 
 
 Build and run the SMILE reference implementation:
