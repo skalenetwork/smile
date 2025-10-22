@@ -12,7 +12,7 @@
 **Turn your SIM card into a x402 crypto wallet. No applets. No passwords. No KYC.**
 
 
-SMILE is a breakthrough protocol that derivesx x402 wallets directly from SIM cards,
+SMILE is a breakthrough protocol that derives x402 wallets directly from SIM cards,
 using open standards, 2G-5G telecom APIs, and the trusted cryptography already built into mobile networks.
 
 Every SIM card already belongs to the world’s largest identity network. 
