@@ -1,6 +1,4 @@
 
-## Overview
-
 <p align="center">
   <img src="smile.png" alt="SMILE" width="25%" />
 </p>
