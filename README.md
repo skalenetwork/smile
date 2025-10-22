@@ -78,7 +78,6 @@ Your phone number is now your wallet identity.
     - [9. Example End-to-End Derivation Flow (5G)](#9-example-end-to-end-derivation-flow-5g)
     - [10. Implementation Notes](#10-implementation-notes)
     - [11. Security Level Summary](#11-security-level-summary)
-    - [12. Final Formula Summary](#12-final-formula-summary)
 
 ---
 
@@ -634,15 +633,5 @@ Output: Seed_5G ∈ {0,1}^256
 | 4G | K_ASME (HMAC-SHA256) | AES-128 + SHA256 | Strong |
 | 5G | K_SEAF (HMAC-SHA256 chain) | AES-128 + SHA256 | Very Strong |
 
----
-
-## 12. Final Formula Summary
-
-| Function | Final Formula | Output Bits |
-|-----------|----------------|--------------|
-| `deriveBIP32MasterSeed2G` | `HKDF_SHA256(SRES‖Kc, "SMILE|2G|salt|v1", "SMILE|2G|seed|v1")` | 256 |
-| `deriveBIP32MasterSeed3G` | `HKDF_SHA256(CK‖IK, SHA256(RAND‖AUTN‖"SMILE|3G|salt|v1"), "SMILE|3G|seed|v1")` | 256 |
-| `deriveBIP32MasterSeed4G` | `HKDF_SHA256(K_ASME, SHA256(SNN‖"|"‖"SMILE|4G|salt|v1"), "SMILE|4G|seed|v1")` | 256 |
-| `deriveBIP32MasterSeed5G` | `HKDF_SHA256(K_SEAF, SHA256(SNN‖"|"‖"SMILE|5G|salt|v1"), "SMILE|5G|seed|v1")` | 256 |
 
 
