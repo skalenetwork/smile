@@ -1,12 +1,15 @@
+
+## Overview
+
 <p align="center">
   <img src="smile.png" alt="SMILE" width="25%" />
 </p>
 
 
-
-
-
 # SMILE — SIM Mobile Identity for Ledgers
+
+[![CI](https://github.com/skalenetwork/smile/actions/workflows/ci.yml/badge.svg)](https://github.com/skalenetwork/smile/actions/workflows/ci.yml)
+
 
 **Turn your SIM card into a crypto wallet. No applets. No passwords. No KYC.**
 
@@ -658,6 +661,4 @@ Output: Seed_5G ∈ {0,1}^256
 | 3G | (CK‖IK) via Milenage | AES-128 | Strong |
 | 4G | K_ASME (HMAC-SHA256) | AES-128 + SHA256 | Strong |
 | 5G | K_SEAF (HMAC-SHA256 chain) | AES-128 + SHA256 | Very Strong |
-
-
 
