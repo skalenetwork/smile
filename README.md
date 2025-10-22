@@ -118,9 +118,9 @@ Each generation uses the same conceptual structure:
 
 | Function | Input | Core Algorithm | Output |
 |-----------|--------|----------------|---------|
-| `deriveBIP32MasterSeed2G` | RAND, Ki | COMP128-1 → SHA-256(SRES ‖ Kc) | 32-byte seed |
-| `deriveBIP32MasterSeed3G` | RAND, AUTN, K, OPc, AMF | Milenage → SHA-256(RES ‖ CK ‖ IK) | 32-byte seed |
-| `deriveBIP32MasterSeed4G` | RAND, AUTN, K, OPc, AMF, SNN | EPS-AKA KDF → SHA-256(RES ‖ K_ASME) | 32-byte seed |
+| `deriveBIP32MasterSeed2G` | RAND, Ki | COMP128-1 → HKDF-SHA-256(SRES ‖ Kc) | 32-byte seed |
+| `deriveBIP32MasterSeed3G` | RAND, AUTN, K, OPc, AMF | Milenage → HKDF=SHA-256(RES ‖ CK ‖ IK) | 32-byte seed |
+| `deriveBIP32MasterSeed4G` | RAND, AUTN, K, OPc, AMF, SNN | EPS-AKA KDF → HKDF-SHA-256(RES ‖ K_ASME) | 32-byte seed |
 | `deriveBIP32MasterSeed5G` | RAND, AUTN, K, OPc, AMF, SNN | 5G-AKA KDF → HKDF-SHA-256(K_SEAF) | 32-byte seed |
 
 ---
