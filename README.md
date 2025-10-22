@@ -311,7 +311,7 @@ Derives a **child private key** from a given 32-byte BIP32 seed, following the s
 
 ### Returns
 
-- 32-byte derived child private key (`array32`). Throews exception on failure.
+- 32-byte derived child private key (`array32`). Throws exception on failure.
 
 ---
 
