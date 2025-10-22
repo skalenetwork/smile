@@ -86,7 +86,7 @@ Your phone number is now your wallet identity.
 Build and run the SMILE reference implementation:
 
 ```bash
-git clone https://github.com/your-org/smile
+git clone https://github.com/skalenetwork/smile
 cd smile && mkdir build && cd build
 cmake .. && make
 ./smile
