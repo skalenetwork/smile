@@ -118,28 +118,6 @@ build/smile
 - 🧩 **Coming soon:** Windows and macOS builds  
 
 
-Build and run the SMILE reference implementation:
-
-```bash
-git clone https://github.com/skalenetwork/smile --recursive
-./external/vcpkg/bootstrap-vcpkg.sh
-./external/vcpkg/vcpkg install
-cmake -S . -B build \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DCMAKE_TOOLCHAIN_FILE=external/vcpkg/scripts/buildsystems/vcpkg.cmake \
-  -DVCPKG_FEATURE_FLAGS=manifests   -DVCPKG_TARGET_TRIPLET=x64-linux 
-cmake --build build -j
-```
-
-Now you can run SMILE demo 
-
-```bash
-build/smile
-```
-
-
-Currently build and tested on Ubuntu 22 or later. Windows and Mac builds coming.
-
 ---
 
 # Using `SmileSeedDerivation` Class
