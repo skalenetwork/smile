@@ -11,7 +11,7 @@
 [![CI](https://github.com/skalenetwork/smile/actions/workflows/ci.yml/badge.svg)](https://github.com/skalenetwork/smile/actions/workflows/ci.yml)
 
 
-**Turn your SIM card into a crypto wallet. No applets. No passwords. No KYC.**
+**Turn your SIM card into a x402 crypto wallet. No applets. No passwords. No KYC.**
 
 
 SMILE is a breakthrough protocol that derives blockchain wallets directly from SIM cards,
